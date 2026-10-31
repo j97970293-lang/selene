@@ -66,6 +66,7 @@ echo "→ compilation (sources JVM)"
   "$SRC"/main/java/io/selene/app/feeds/FeedParser.kt \
   "$SRC"/main/java/io/selene/app/vault/VaultCipher.kt \
   "$SRC"/main/java/io/selene/app/queue/QueueOrder.kt \
+  "$SRC"/main/java/io/selene/app/queue/DownloadSlots.kt \
   "$SRC/main/java/io/selene/app/downloading/DownloadEngine.kt" \
   "$SRC/main/java/io/selene/app/downloading/FileNamer.kt" \
   "$SRC/main/java/io/selene/app/downloading/SegmentDownloader.kt" \

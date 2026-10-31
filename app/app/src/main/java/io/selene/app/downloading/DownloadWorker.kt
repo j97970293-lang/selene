@@ -30,6 +30,7 @@ class DownloadWorker @AssistedInject constructor(
     private val ytDlpDownloader: YtDlpDownloader,
     private val database: SeleneDatabase,
     private val notifier: DownloadNotifier,
+    private val slots: io.selene.app.queue.DownloadSlots,
 ) : CoroutineWorker(appContext, params) {
 
     override suspend fun doWork(): Result {
@@ -64,6 +65,7 @@ class DownloadWorker @AssistedInject constructor(
 
         return try {
             var lastPersist = 0L
+            // Respecte le réglage « téléchargements simultanés » (1 à 4).
             val onProgress: suspend (Long, Long?) -> Unit = { downloaded, total ->
                 val tick = System.currentTimeMillis()
                 if (tick - lastPersist >= PROGRESS_INTERVAL_MS) {
@@ -75,28 +77,30 @@ class DownloadWorker @AssistedInject constructor(
                 }
             }
 
-            val file = when {
-                variant.id.startsWith("yt-dlp:") -> ytDlpDownloader.download(
-                    pageUrl = media.canonicalUrl,
-                    variant = variant,
-                    target = target,
-                    onProgress = onProgress,
-                )
+            val file = slots.withSlot {
+                when {
+                    variant.id.startsWith("yt-dlp:") -> ytDlpDownloader.download(
+                        pageUrl = media.canonicalUrl,
+                        variant = variant,
+                        target = target,
+                        onProgress = onProgress,
+                    )
 
-                isDash -> dashDownloader.download(
-                    manifestUrl = variant.url,
-                    representationId = variant.id.removePrefix("dash:"),
-                    target = target,
-                    onProgress = onProgress,
-                )
+                    isDash -> dashDownloader.download(
+                        manifestUrl = variant.url,
+                        representationId = variant.id.removePrefix("dash:"),
+                        target = target,
+                        onProgress = onProgress,
+                    )
 
-                isHls -> hlsDownloader.download(
-                    playlistUrl = variant.url,
-                    target = target,
-                    onProgress = onProgress,
-                )
+                    isHls -> hlsDownloader.download(
+                        playlistUrl = variant.url,
+                        target = target,
+                        onProgress = onProgress,
+                    )
 
-                else -> engine.download(variant.url, target, onProgress = onProgress)
+                    else -> engine.download(variant.url, target, onProgress = onProgress)
+                }
             }
 
             taskDao.setCompleted(taskId, Uri.fromFile(file).toString(), file.length(), System.currentTimeMillis())

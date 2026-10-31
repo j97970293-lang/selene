@@ -74,6 +74,10 @@ object AppModule {
 
     @Provides
     @Singleton
+    fun downloadSlots(): io.selene.app.queue.DownloadSlots = io.selene.app.queue.DownloadSlots()
+
+    @Provides
+    @Singleton
     fun segmentDownloader(engine: DownloadEngine): SegmentDownloader = SegmentDownloader(engine)
 
     @Provides

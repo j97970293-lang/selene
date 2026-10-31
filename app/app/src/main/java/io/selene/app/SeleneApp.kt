@@ -7,6 +7,7 @@ import com.yausername.ffmpeg.FFmpeg
 import com.yausername.youtubedl_android.YoutubeDL
 import dagger.hilt.android.HiltAndroidApp
 import io.selene.app.data.SettingsRepository
+import io.selene.app.queue.DownloadSlots
 import io.selene.app.resolver.ExternalResolver
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -25,6 +26,9 @@ class SeleneApp : Application(), Configuration.Provider {
 
     @Inject
     lateinit var externalResolver: ExternalResolver
+
+    @Inject
+    lateinit var downloadSlots: DownloadSlots
 
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
@@ -50,7 +54,10 @@ class SeleneApp : Application(), Configuration.Provider {
         // sont poussés dès qu'ils changent. Tant que ce n'est pas fait, `matches` renvoie faux,
         // donc aucune adresse ne peut partir vers un pont par accident.
         applicationScope.launch {
-            settings.settings.collect { externalResolver.applySettings(it) }
+            settings.settings.collect { current ->
+                externalResolver.applySettings(current)
+                downloadSlots.setMax(current.downloadSlots)
+            }
         }
     }
 }

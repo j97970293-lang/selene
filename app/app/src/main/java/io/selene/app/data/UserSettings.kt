@@ -18,4 +18,6 @@ data class UserSettings(
     val externalResolverEnabled: Boolean = false,
     val externalResolverEndpoint: String = "",
     val externalResolverToken: String = "",
+    /** Téléchargements simultanés : 1 à 4 (voir [io.selene.app.queue.DownloadSlots]). */
+    val downloadSlots: Int = 1,
 )

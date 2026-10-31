@@ -10,6 +10,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -45,6 +46,8 @@ class SettingsViewModel @Inject constructor(
 
     fun setExternalResolver(enabled: Boolean, endpoint: String, token: String) =
         viewModelScope.launch { settings.setExternalResolver(enabled, endpoint, token) }
+
+    fun setDownloadSlots(slots: Int) = viewModelScope.launch { settings.setDownloadSlots(slots) }
 }
 
 @Composable
@@ -65,6 +68,21 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
             checked = state.wifiOnly,
             onCheckedChange = viewModel::setWifiOnly,
         )
+
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text("Téléchargements simultanés", style = MaterialTheme.typography.titleSmall)
+            Text(
+                "Au-delà de 2, le gain de débit est faible et le réseau mobile sature.",
+                style = MaterialTheme.typography.bodySmall,
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                (1..4).forEach { slots ->
+                    TextButton(onClick = { viewModel.setDownloadSlots(slots) }) {
+                        Text(if (slots == state.downloadSlots) "[$slots]" else "$slots")
+                    }
+                }
+            }
+        }
 
         SettingSwitch(
             title = "Proposer les liens copiés",

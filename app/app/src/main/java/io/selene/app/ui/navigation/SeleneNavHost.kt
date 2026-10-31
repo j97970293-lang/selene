@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddLink
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Podcasts
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material3.Icon
@@ -24,7 +25,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import io.selene.app.ui.browser.BrowserScreen
 import io.selene.app.ui.downloads.DownloadsScreen
+import io.selene.app.ui.feeds.FeedsScreen
+import io.selene.app.ui.feeds.FeedsViewModel
 import io.selene.app.ui.downloads.DownloadsViewModel
 import io.selene.app.ui.library.LibraryScreen
 import io.selene.app.ui.library.LibraryViewModel
@@ -40,6 +44,8 @@ private object Routes {
     const val LIBRARY = "library"
     const val SETTINGS = "settings"
     const val PLAYER = "player/{uri}"
+    const val BROWSER = "browser"
+    const val FEEDS = "feeds"
 
     fun resolve(url: String) = "resolve?url=${Uri.encode(url)}"
     fun player(uri: String) = "player/${Uri.encode(uri)}"
@@ -51,6 +57,7 @@ private val tabs = listOf(
     Tab("resolve?url=", "Nouveau", Icons.Default.AddLink),
     Tab(Routes.DOWNLOADS, "Téléchargements", Icons.Default.Download),
     Tab(Routes.LIBRARY, "Bibliothèque", Icons.Default.VideoLibrary),
+    Tab(Routes.FEEDS, "Flux", Icons.Default.Podcasts),
     Tab(Routes.SETTINGS, "Réglages", Icons.Default.Settings),
 )
 
@@ -108,6 +115,7 @@ fun SeleneNavHost(initialUrl: String?) {
                 ResolveScreen(
                     viewModel = viewModel,
                     onOpenDownloads = { navController.navigate(Routes.DOWNLOADS) },
+                    onOpenBrowser = { navController.navigate(Routes.BROWSER) },
                 )
             }
 
@@ -122,6 +130,17 @@ fun SeleneNavHost(initialUrl: String?) {
             composable(Routes.LIBRARY) {
                 val viewModel: LibraryViewModel = hiltViewModel()
                 LibraryScreen(viewModel = viewModel)
+            }
+
+            composable(Routes.FEEDS) {
+                val viewModel: FeedsViewModel = hiltViewModel()
+                FeedsScreen(viewModel = viewModel)
+            }
+
+            composable(Routes.BROWSER) {
+                BrowserScreen(
+                    onPickMedia = { url -> navController.navigate(Routes.resolve(url)) },
+                )
             }
 
             composable(Routes.SETTINGS) {

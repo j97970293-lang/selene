@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
@@ -29,6 +30,7 @@ class SettingsRepository @Inject constructor(
         val externalEnabled = booleanPreferencesKey("external.enabled")
         val externalEndpoint = stringPreferencesKey("external.endpoint")
         val externalToken = stringPreferencesKey("external.token")
+        val downloadSlots = intPreferencesKey("download.slots")
     }
 
     val settings: Flow<UserSettings> = context.settingsDataStore.data.map { prefs ->
@@ -42,6 +44,7 @@ class SettingsRepository @Inject constructor(
             externalResolverEnabled = prefs[Keys.externalEnabled] ?: false,
             externalResolverEndpoint = prefs[Keys.externalEndpoint].orEmpty(),
             externalResolverToken = prefs[Keys.externalToken].orEmpty(),
+            downloadSlots = prefs[Keys.downloadSlots] ?: 1,
         )
     }
 
@@ -51,6 +54,10 @@ class SettingsRepository @Inject constructor(
 
     suspend fun setClipboardWatch(enabled: Boolean) = context.settingsDataStore.edit {
         it[Keys.clipboardWatch] = enabled
+    }
+
+    suspend fun setDownloadSlots(slots: Int) = context.settingsDataStore.edit {
+        it[Keys.downloadSlots] = slots.coerceIn(1, 4)
     }
 
     suspend fun setTheme(mode: ThemeMode) = context.settingsDataStore.edit {

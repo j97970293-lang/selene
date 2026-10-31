@@ -149,6 +149,7 @@ class ResolveViewModel @Inject constructor(
 fun ResolveScreen(
     viewModel: ResolveViewModel,
     onOpenDownloads: () -> Unit,
+    onOpenBrowser: () -> Unit = {},
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -198,8 +199,11 @@ fun ResolveScreen(
                 }
             }
         }
-        TextButton(onClick = { pickJson.launch(arrayOf("application/json", "text/plain")) }) {
-            Text("Importer une sortie yt-dlp (.json)")
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            TextButton(onClick = { pickJson.launch(arrayOf("application/json", "text/plain")) }) {
+                Text("Importer une sortie yt-dlp (.json)")
+            }
+            TextButton(onClick = onOpenBrowser) { Text("Parcourir une page") }
         }
 
         when {
