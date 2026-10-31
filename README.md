@@ -6,15 +6,15 @@ L’application est conçue pour télécharger les contenus que l’utilisateur 
 
 ## Télécharger l'APK
 
-Deux APK signés (clé de debug : installation directe acceptée par Android), compilés
-automatiquement par GitHub Actions à chaque poussée :
+Deux APK signés (clé de debug : installation directe acceptée par Android), publiés
+automatiquement par GitHub Actions à chaque tag `v*` :
 
 | Architecture | Fichier | Taille |
 | --- | --- | --- |
-| `arm64-v8a` (64 bits, à prendre en priorité) | [selene-0.1.0-arm64-v8a.apk](https://github.com/j97970293-lang/selene/releases/download/v0.1.0/selene-0.1.0-arm64-v8a.apk) | 55 Mo |
-| `armeabi-v7a` (32 bits, appareils anciens) | [selene-0.1.0-armeabi-v7a.apk](https://github.com/j97970293-lang/selene/releases/download/v0.1.0/selene-0.1.0-armeabi-v7a.apk) | 49 Mo |
+| `arm64-v8a` (64 bits, à prendre en priorité) | [selene-0.2.0-arm64-v8a.apk](https://github.com/j97970293-lang/selene/releases/download/v0.2.0/selene-0.2.0-arm64-v8a.apk) | 55 Mo |
+| `armeabi-v7a` (32 bits, appareils anciens) | [selene-0.2.0-armeabi-v7a.apk](https://github.com/j97970293-lang/selene/releases/download/v0.2.0/selene-0.2.0-armeabi-v7a.apk) | 49 Mo |
 
-Page de la release : <https://github.com/j97970293-lang/selene/releases/tag/v0.1.0>
+Page de la release : <https://github.com/j97970293-lang/selene/releases/tag/v0.2.0>
 
 L'essentiel du poids vient de `yt-dlp` : FFmpeg (34 Mo) et l'interpréteur Python
 (13,6 Mo) embarqués par architecture. Les ABI `x86`/`x86_64` ne sont pas produites :
