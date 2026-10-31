@@ -72,6 +72,10 @@ data class DownloadTaskEntity(
     @ColumnInfo(name = "created_at") val createdAt: Long,
     @ColumnInfo(name = "updated_at") val updatedAt: Long,
     @ColumnInfo(name = "completed_at") val completedAt: Long?,
+    /** Plus haut = passé devant. 0 par défaut, 10 pour un téléchargement urgent. */
+    val priority: Int = 0,
+    /** Ordre choisi par l'utilisateur à l'intérieur d'une même priorité. */
+    val position: Long = 0,
 )
 
 /** Ligne dénormalisée pour l'écran des téléchargements (une seule requête). */
@@ -85,6 +89,8 @@ data class TaskRow(
     val bytesTotal: Long?,
     val lastError: String?,
     val destinationUri: String?,
+    val priority: Int = 0,
+    val position: Long = 0,
 ) {
     val progress: Float?
         get() = bytesTotal?.takeIf { it > 0 }?.let {

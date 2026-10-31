@@ -12,6 +12,8 @@ import io.selene.app.data.db.MediaDao
 import io.selene.app.data.db.SeleneDatabase
 import io.selene.app.data.db.TaskDao
 import io.selene.app.data.db.VariantDao
+import com.squareup.moshi.Moshi
+import io.selene.app.converting.AudioExporter
 import io.selene.app.downloading.DashDownloader
 import io.selene.app.downloading.DownloadEngine
 import io.selene.app.downloading.HlsDownloader
@@ -19,11 +21,13 @@ import io.selene.app.downloading.SegmentDownloader
 import io.selene.app.downloading.YtDlpDownloader
 import io.selene.app.resolver.DashResolver
 import io.selene.app.resolver.DirectUrlResolver
+import io.selene.app.feeds.FeedResolver
 import io.selene.app.resolver.ExternalResolver
 import io.selene.app.resolver.HlsResolver
 import io.selene.app.resolver.MediaResolver
 import io.selene.app.resolver.ResolverRegistry
 import io.selene.app.resolver.YtDlpResolver
+import io.selene.app.vault.VaultManager
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
@@ -46,6 +50,7 @@ object AppModule {
     @Singleton
     fun database(@ApplicationContext context: Context): SeleneDatabase =
         Room.databaseBuilder(context, SeleneDatabase::class.java, "selene.db")
+            .addMigrations(SeleneDatabase.MIGRATION_1_2)
             .fallbackToDestructiveMigrationOnDowngrade()
             .build()
 
@@ -99,10 +104,19 @@ object AppModule {
         direct: DirectUrlResolver,
         hls: HlsResolver,
         dash: DashResolver,
+        feed: FeedResolver,
         external: ExternalResolver,
         ytDlp: YtDlpResolver,
     ): ResolverRegistry {
-        val resolvers: Set<MediaResolver> = setOf(direct, hls, dash, external, ytDlp)
+        val resolvers: Set<MediaResolver> = setOf(direct, hls, dash, feed, external, ytDlp)
         return ResolverRegistry(resolvers)
     }
+
+    @Provides
+    @Singleton
+    fun audioExporter(@ApplicationContext context: Context): AudioExporter = AudioExporter(context)
+
+    @Provides
+    @Singleton
+    fun vaultManager(@ApplicationContext context: Context): VaultManager = VaultManager(context)
 }

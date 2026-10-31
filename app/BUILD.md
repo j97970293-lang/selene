@@ -61,7 +61,7 @@ contenant des virgules, piste audio `DEFAULT=YES`, refus explicite d'un flux `AE
 | --- | --- |
 | Package | `io.selene.app` — 37 fichiers `.kt`, arborescences cohérentes |
 | Cœur non-Android | **compilé** avec kotlinc 2.0.21, 0 erreur, 0 avertissement bloquant |
-| Tests JVM | **55 tests, 55 verts** (`./verify-jvm.sh`) |
+| Tests JVM | **81 tests, 81 verts** (`./verify-jvm.sh`) |
 | APK | **non produit** — voir ci-dessous |
 | APK, pourquoi | cet atelier a un JDK 11 (AGP 8.7 exige 17+), aucun SDK Android, 1 Go de RAM |
 
@@ -79,6 +79,12 @@ gradle wrapper --gradle-version 8.11
 echo "sdk.dir=$HOME/Android/Sdk" > local.properties
 ./gradlew :app:assembleDebug
 ```
+
+## Nouveaux modules testés sur JVM
+
+`FeedParserTest` (RSS 2.0 + Atom, durées, dates RFC 822 / ISO 8601), `VaultCipherTest`
+(AES-GCM par blocs : aller-retour, mauvaise clé, octet modifié, flux tronqué, fichier étranger),
+`QueueOrderTest` (priorité avant position, bandes non franchissables, réattribution des positions).
 
 ## Trois bugs trouvés en exécutant les tests
 

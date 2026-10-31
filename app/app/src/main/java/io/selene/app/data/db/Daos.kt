@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import io.selene.app.queue.QueueRow
 import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
 
@@ -62,7 +63,8 @@ interface TaskDao {
         SELECT t.id AS id, t.state AS state, m.title AS title, v.container AS container,
                v.quality_label AS qualityLabel, t.bytes_downloaded AS bytesDownloaded,
                t.bytes_total AS bytesTotal, t.last_error AS lastError,
-               t.destination_uri AS destinationUri
+               t.destination_uri AS destinationUri,
+               t.priority AS priority, t.position AS position
         FROM download_task t
         JOIN variant v ON v.id = t.variant_id
         JOIN media_item m ON m.id = v.media_id
@@ -76,12 +78,13 @@ interface TaskDao {
         SELECT t.id AS id, t.state AS state, m.title AS title, v.container AS container,
                v.quality_label AS qualityLabel, t.bytes_downloaded AS bytesDownloaded,
                t.bytes_total AS bytesTotal, t.last_error AS lastError,
-               t.destination_uri AS destinationUri
+               t.destination_uri AS destinationUri,
+               t.priority AS priority, t.position AS position
         FROM download_task t
         JOIN variant v ON v.id = t.variant_id
         JOIN media_item m ON m.id = v.media_id
         WHERE t.state IN ('QUEUED', 'RUNNING', 'PAUSED')
-        ORDER BY t.created_at ASC
+        ORDER BY t.priority DESC, t.position ASC, t.created_at ASC
         """,
     )
     fun observeActive(): Flow<List<TaskRow>>
@@ -116,6 +119,32 @@ interface TaskDao {
         """,
     )
     suspend fun setFailed(id: String, error: String, now: Long)
+
+    @Query("UPDATE download_task SET priority = :priority, updated_at = :now WHERE id = :id")
+    suspend fun setPriority(id: String, priority: Int, now: Long)
+
+    @Query("UPDATE download_task SET position = :position, updated_at = :now WHERE id = :id")
+    suspend fun setPosition(id: String, position: Long, now: Long)
+
+    @Query("SELECT COALESCE(MAX(position), 0) FROM download_task WHERE state IN ('QUEUED', 'PAUSED')")
+    suspend fun maxPosition(): Long
+
+    @Query(
+        "SELECT id, priority, position FROM download_task WHERE state IN ('QUEUED', 'PAUSED') " +
+            "ORDER BY priority DESC, position ASC",
+    )
+    suspend fun activeEntries(): List<QueueRow>
+
+    /** Chemin local du dernier téléchargement terminé pour un média donné. */
+    @Query(
+        """
+        SELECT t.destination_uri FROM download_task t
+        JOIN variant v ON v.id = t.variant_id
+        WHERE v.media_id = :mediaId AND t.state = 'DONE' AND t.destination_uri IS NOT NULL
+        ORDER BY t.completed_at DESC LIMIT 1
+        """,
+    )
+    suspend fun completedUriFor(mediaId: String): String?
 
     @Query("DELETE FROM download_task WHERE id = :id")
     suspend fun delete(id: String)

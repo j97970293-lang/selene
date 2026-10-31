@@ -15,7 +15,18 @@ L’application est conçue pour télécharger les contenus que l’utilisateur 
 - Bibliothèque locale et lecture des fichiers téléchargés.
 - Import possible d’un JSON produit par `yt-dlp -J` lorsque l’utilisateur préfère générer les métadonnées ailleurs.
 
-## Architecture yt-dlp
+| Bloc | Contenu |
+| --- | --- |
+| `app/` | application Kotlin + Compose, package `io.selene.app` |
+| `resolver/` | direct, HLS, DASH, RSS/podcast, pont externe, yt-dlp |
+| `queue/` | file priorisée : bandes de priorité, réordonnancement, reprise, Wi-Fi seul |
+| `feeds/` | flux RSS / Atom → épisodes téléchargeables |
+| `vault/` | coffre chiffré AES-256-GCM par blocs, clé dans l'Android Keystore |
+| `converting/` | export audio `.m4a` (AAC) via Media3 |
+| `imports/` | import d'une sortie `yt-dlp -J` |
+| `library/` | bibliothèque, recherche locale |
+| `playback/` | lecteur plein écran, fenêtre flottante (PiP) |
+| `browser/` | navigateur à onglets (à venir) |
 
 Pour une page qui n’est pas elle-même un fichier média, Selene appelle la bibliothèque Android `youtubedl-android`, qui embarque yt-dlp et Python. `yt-dlp` renvoie les métadonnées et les formats disponibles. Selene les transforme en variantes affichées dans l’interface.
 

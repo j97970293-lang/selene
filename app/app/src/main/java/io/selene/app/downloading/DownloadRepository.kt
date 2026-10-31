@@ -102,6 +102,30 @@ class DownloadRepository @Inject constructor(
         }
     }
 
+    /**
+     * Monte ou descend une entrée dans sa bande de priorité.
+     * La règle de bande est dans [QueueOrder] : on ne franchit pas une priorité supérieure.
+     */
+    suspend fun move(taskId: String, direction: Int) {
+        val now = System.currentTimeMillis()
+        val entries = database.taskDao().activeEntries().map { entry ->
+            io.selene.app.queue.QueueEntry(entry.id, entry.priority, entry.position)
+        }
+        val reordered = if (direction < 0) {
+            io.selene.app.queue.QueueOrder.bumpUp(entries, taskId)
+        } else {
+            io.selene.app.queue.QueueOrder.bumpDown(entries, taskId)
+        }
+        reordered.forEach { entry ->
+            database.taskDao().setPosition(entry.id, entry.position, now)
+        }
+    }
+
+    /** 0 = normal, 10 = urgent. */
+    suspend fun setPriority(taskId: String, priority: Int) {
+        database.taskDao().setPriority(taskId, priority, System.currentTimeMillis())
+    }
+
     suspend fun deleteRecord(taskId: String) {
         workManager.cancelUniqueWork(workName(taskId))
         database.taskDao().delete(taskId)

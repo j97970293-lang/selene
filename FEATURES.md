@@ -24,6 +24,7 @@ Aucune ligne de code, aucune ressource, aucun texte de la cible n'est utilisée.
 | 10 | Choix de la langue d'interface | repris | ressources `values-*` |
 | 11 | Sous-titres séparés | repris | `SubtitleTrack`, `.vtt`/`.srt` téléchargé à part |
 | 12 | Aperçu avant téléchargement | repris | vignette + durée + taille estimée |
+| 12b | Conversion audio d'un média téléchargé | repris | `.m4a` (AAC) via Media3 — MP3 non supporté, pas de faux fichier renommé |
 | 13 | Choix du dossier de destination | repris | SAF (`ACTION_OPEN_DOCUMENT_TREE`) |
 | 14 | Téléchargement d'un manifeste HLS/DASH | repris | segmentation, concaténation, reprise par segment (`.ts` / piste MP4) |
 | 15 | Extraction d'une page non média via yt-dlp | repris | yt-dlp embarqué, formats affichés puis téléchargement local — voir `BOUNDARY.md` |
@@ -38,7 +39,7 @@ Aucune ligne de code, aucune ressource, aucun texte de la cible n'est utilisée.
 | 18 | Reprise après coupure réseau | repris | `Range` + `.part`, testé |
 | 19 | Reprise après redémarrage | repris | WorkManager `KEEP` + état en base |
 | 20 | Concurrence configurable | repris | 1 à 4 téléchargements simultanés |
-| 21 | Priorités et réordonnancement | repris | glisser-déposer dans la file |
+| 21 | Priorités et réordonnancement | repris | bandes de priorité + ▲▼★ dans la file (`QueueOrder`) |
 | 22 | Wi-Fi uniquement | repris | contrainte `UNMETERED` |
 | 23 | Notifications avec actions | repris | pause/annuler depuis la notification |
 | 24 | Notification auto-effacée à la fin | repris | `setAutoCancel` |

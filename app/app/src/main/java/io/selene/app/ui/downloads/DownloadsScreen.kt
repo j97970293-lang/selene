@@ -48,6 +48,13 @@ class DownloadsViewModel @Inject constructor(
     fun cancel(task: TaskRow) = viewModelScope.launch { downloads.cancel(task.id) }
 
     fun remove(task: TaskRow) = viewModelScope.launch { downloads.deleteRecord(task.id) }
+
+    fun moveUp(task: TaskRow) = viewModelScope.launch { downloads.move(task.id, -1) }
+
+    fun moveDown(task: TaskRow) = viewModelScope.launch { downloads.move(task.id, 1) }
+
+    fun boost(task: TaskRow) =
+        viewModelScope.launch { downloads.setPriority(task.id, if (task.priority > 0) 0 else 10) }
 }
 
 private val activeStates = setOf("QUEUED", "RUNNING", "PAUSED")
@@ -98,6 +105,9 @@ fun DownloadsScreen(
                 onCancel = null,
                 onPlay = task.destinationUri?.let { uri -> { onPlay(uri) } },
                 onRemove = { viewModel.remove(task) },
+                onUp = { viewModel.moveUp(task) },
+                onDown = { viewModel.moveDown(task) },
+                onBoost = { viewModel.boost(task) },
             )
         }
     }
@@ -111,6 +121,9 @@ private fun TaskCard(
     onCancel: (() -> Unit)?,
     onPlay: (() -> Unit)?,
     onRemove: (() -> Unit)?,
+    onUp: () -> Unit,
+    onDown: () -> Unit,
+    onBoost: () -> Unit,
 ) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -132,6 +145,17 @@ private fun TaskCard(
                 onResume?.let { TextButton(onClick = it) { Text("Reprendre") } }
                 onCancel?.let { TextButton(onClick = it) { Text("Annuler") } }
                 onRemove?.let { TextButton(onClick = it) { Text("Retirer") } }
+            }
+
+            // File priorisée : ▲ / ▼ dans la même bande, ★ pour passer en urgent (priorité 10).
+            if (task.state == "QUEUED" || task.state == "PAUSED") {
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    TextButton(onClick = onUp) { Text("▲") }
+                    TextButton(onClick = onDown) { Text("▼") }
+                    TextButton(onClick = onBoost) {
+                        Text(if (task.priority > 0) "★ urgent" else "☆ prioriser")
+                    }
+                }
             }
         }
     }

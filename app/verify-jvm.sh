@@ -63,6 +63,9 @@ echo "→ compilation (sources JVM)"
   "$SRC/main/java/io/selene/app/resolver/MediaResolver.kt" \
   "$SRC/main/java/io/selene/app/resolver/PlaylistParser.kt" \
   "$SRC"/main/java/io/selene/app/imports/*.kt \
+  "$SRC"/main/java/io/selene/app/feeds/FeedParser.kt \
+  "$SRC"/main/java/io/selene/app/vault/VaultCipher.kt \
+  "$SRC"/main/java/io/selene/app/queue/QueueOrder.kt \
   "$SRC/main/java/io/selene/app/downloading/DownloadEngine.kt" \
   "$SRC/main/java/io/selene/app/downloading/FileNamer.kt" \
   "$SRC/main/java/io/selene/app/downloading/SegmentDownloader.kt" \
@@ -70,7 +73,10 @@ echo "→ compilation (sources JVM)"
   "$SRC/main/java/io/selene/app/downloading/DashDownloader.kt" \
   "$SRC"/test/java/io/selene/app/downloading/*.kt \
   "$SRC"/test/java/io/selene/app/resolver/*.kt \
-  "$SRC"/test/java/io/selene/app/imports/*.kt
+  "$SRC"/test/java/io/selene/app/imports/*.kt \
+  "$SRC"/test/java/io/selene/app/feeds/*.kt \
+  "$SRC"/test/java/io/selene/app/vault/*.kt \
+  "$SRC"/test/java/io/selene/app/queue/*.kt
 
 echo "→ tests"
 java -Xmx600m -cp "$OUT:$CP" org.junit.runner.JUnitCore \
@@ -79,4 +85,7 @@ java -Xmx600m -cp "$OUT:$CP" org.junit.runner.JUnitCore \
   io.selene.app.resolver.PlaylistParserTest \
   io.selene.app.resolver.DashManifestParserTest \
   io.selene.app.resolver.ExternalResolverTest \
-  io.selene.app.imports.YtDlpJsonTest
+  io.selene.app.imports.YtDlpJsonTest \
+  io.selene.app.feeds.FeedParserTest \
+  io.selene.app.vault.VaultCipherTest \
+  io.selene.app.queue.QueueOrderTest

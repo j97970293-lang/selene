@@ -83,12 +83,14 @@ Migration 3 : `download_task.priority`, `download_task.segment_index`, `download
 | --- | --- |
 | 1. Socle importé, package `io.selene.app` | fait — 27 fichiers `.kt` côté `main` |
 | 2. HLS + DASH | fait — `PlaylistParser`, `HlsResolver`, `DashManifestParser`, `DashResolver` |
-| 2 bis. RSS / podcast | à faire |
-| 3. File avancée (priorités, concurrence) | à faire |
+| 2 bis. RSS / podcast | fait — `FeedParser`, `FeedResolver` |
+| 3. File priorisée (priorités, réordonnancement) | fait — `QueueOrder`, DAO, boutons ▲▼★ |
+| 3 bis. Concurrence 1→4 | à faire (`WorkManager` sérialise pour l'instant) |
 | 4. Bibliothèque (playlists, historique) | à faire |
 | 5. Lecteur (PiP, MediaSession) | à faire |
 | 6. Navigateur à détection de médias | à faire |
-| 7. Coffre chiffré | à faire |
+| 7. Coffre chiffré | fait — `VaultCipher` (AES-GCM par blocs), `VaultManager` (Keystore) |
+| 7 bis. Conversion audio | fait — `AudioExporter` (Media3, `.m4a`/AAC ; MP3 non supporté) |
 | 8. Finitions | à faire |
 
 Moteur segmenté commun : `SegmentDownloader` sert HLS et DASH (reprise par segment, état `.seg`).
