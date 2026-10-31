@@ -87,13 +87,19 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG="${GITHUB_REF_NAME}"
+          VERSION="${TAG#v}"
+          mkdir -p /tmp/assets
+          # gh ne renomme pas un fichier à l'envoi : on prépare des noms lisibles avant.
+          for apk in app/build/outputs/apk/release/*.apk; do
+            abi="$(basename "$apk" .apk)"
+            abi="${abi#app-}"
+            abi="${abi%-release}"
+            cp "$apk" "/tmp/assets/selene-${VERSION}-${abi}.apk"
+          done
           gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 \
             || gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --title "Séléné $TAG" --prerelease \
                  --notes "APK par architecture, signés avec la clé de debug."
-          for apk in app/build/outputs/apk/release/*.apk; do
-            abi="$(basename "$apk" .apk)"
-            gh release upload "$TAG" "$apk#selene-${TAG#v}-${abi#app-}.apk" --repo "$GITHUB_REPOSITORY" --clobber
-          done
+          gh release upload "$TAG" /tmp/assets/*.apk --repo "$GITHUB_REPOSITORY" --clobber
 
       - name: Publier les rapports de compilation
         if: failure()
