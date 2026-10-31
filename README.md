@@ -51,7 +51,7 @@ Localement, sans SDK Android : `cd app && ./verify-jvm.sh`.
 | `imports/` | import d'une sortie `yt-dlp -J` |
 | `library/` | bibliothèque, recherche locale |
 | `playback/` | lecteur plein écran, fenêtre flottante (PiP) |
-| `browser/` | navigateur à onglets (à venir) |
+| `browser/` | navigateur d'observation réseau : il retient les médias qu'une page charge réellement |
 
 Pour une page qui n’est pas elle-même un fichier média, Selene appelle la bibliothèque Android `youtubedl-android`, qui embarque yt-dlp et Python. `yt-dlp` renvoie les métadonnées et les formats disponibles. Selene les transforme en variantes affichées dans l’interface.
 

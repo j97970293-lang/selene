@@ -19,19 +19,19 @@ Selene ne sait pas faire la première ligne. Tout le reste du tableau ci-dessous
 | | Snaptube 7.68.1 | Séléné |
 | --- | --- | --- |
 | Package | `com.snaptube.premium` | `io.selene.app` |
-| Taille | 62 989 999 o (63 Mo) | à mesurer (socle `apk-reverse/app` : 23 fichiers, 2 198 lignes) |
+| Taille | 62 989 999 o (63 Mo) | **55 Mo** (arm64-v8a) / **49 Mo** (armeabi-v7a), APK séparés par ABI |
 | Classes | 51 012 | — |
-| minSdk / target | 21 / 36 | 21 / 36 (même plancher) |
+| minSdk / target | 21 / 36 | 24 / 36 |
 | Signature | auto-signée `C=IN`, série `47723C30`, alias `LUNADEV_` | clé de release propre |
 | Distribution | sideload depuis un site, hors Play Store | dépôt source, build reproductible |
 | Repack | oui : `FancyApplication`, `NPProtect`, `libmatrix-hook*.so` | aucun |
-| Compilé | oui | **pas encore** (pas de SDK/JDK 17+ dans l'atelier) |
+| Compilé | oui | **oui** — GitHub Actions, run `41189634518`, APK publiés en release |
 
 ## 3. Permissions et vie privée
 
 | | Snaptube | Séléné |
 | --- | --- | --- |
-| Nombre de permissions | 17 | 6 |
+| Nombre de permissions | 17 | 7 |
 | `MANAGE_EXTERNAL_STORAGE` | oui | non — écriture via MediaStore |
 | `SYSTEM_ALERT_WINDOW` | oui | non |
 | Trafic HTTP en clair | autorisé (`usesCleartextTraffic="true"`) | interdit (`network_security_config`) |
