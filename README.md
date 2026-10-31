@@ -24,7 +24,7 @@ elles ne servaient qu'aux émulateurs et doublaient le téléchargement.
 
 | Job GitHub Actions | Ce qu'il prouve |
 | --- | --- |
-| `Tests JVM (cœur non-Android)` | résolveurs, file, coffre, parseurs : 95 tests, ~14 s |
+| `Tests JVM (cœur non-Android)` | résolveurs, file, coffre, parseurs, classement des médias : ~130 tests, ~15 s |
 | `APK release (SDK Android)` | `assembleRelease` complet : R8, ressources réduites, deux APK par ABI |
 
 Localement, sans SDK Android : `cd app && ./verify-jvm.sh`.
@@ -38,6 +38,16 @@ Localement, sans SDK Android : `cd app && ./verify-jvm.sh`.
 - Fusion automatique des pistes vidéo et audio séparées grâce à FFmpeg.
 - File persistante avec WorkManager, reprise après coupure, pause, annulation, notifications et option Wi-Fi uniquement.
 - Bibliothèque locale et lecture des fichiers téléchargés.
+- **Export vers la galerie** : copie dans `Movies/Selene`, `Music/Selene` ou `Download/Selene`
+  (MediaStore sur Android 10+, écriture directe et permission à la demande sur Android 7-9).
+- **Notifications demandées au premier lancement** (Android 13+) : progression et fin visibles.
+- **Moteur yt-dlp réparable** : version affichée, mise à jour du binaire depuis les réglages,
+  échec de démarrage expliqué au lieu d'être avalé.
+- **Navigateur de détection** : observe les requêtes, les balises `<video>/<audio>` et les liens,
+  classe ce qu'il voit (flux, vidéo, audio, sous-titres, fragment, protégé) et ne propose que ce
+  qui est téléchargeable.
+- **Presse-papiers opt-in** : un lien copié est proposé quand le réglage est activé.
+- **Diagnostic du pont externe** : `GET /health` → joignable / jeton refusé / schéma incompatible.
 - Import possible d’un JSON produit par `yt-dlp -J` lorsque l’utilisateur préfère générer les métadonnées ailleurs.
 
 | Bloc | Contenu |

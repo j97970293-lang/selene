@@ -12,7 +12,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import android.Manifest
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -23,6 +27,8 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.selene.app.data.db.MediaDao
 import io.selene.app.converting.AudioExporter
+import io.selene.app.downloading.ExportResult
+import io.selene.app.downloading.MediaExporter
 import io.selene.app.data.db.MediaItemEntity
 import io.selene.app.data.db.TaskDao
 import io.selene.app.vault.VaultManager
@@ -46,7 +52,16 @@ class LibraryViewModel @Inject constructor(
     private val taskDao: TaskDao,
     private val exporter: AudioExporter,
     private val vault: VaultManager,
+    private val gallery: MediaExporter,
 ) : ViewModel() {
+
+    /**
+     * Sur Android 9 et antérieurs, écrire dans le stockage partagé exige un accord
+     * explicite. La demande est faite au moment de l'export, jamais au démarrage, et
+     * l'élément concerné est retenu pour reprendre l'opération si l'accord arrive.
+     */
+    private val _pendingPermission = MutableStateFlow<MediaItemEntity?>(null)
+    val pendingPermission: StateFlow<MediaItemEntity?> = _pendingPermission.asStateFlow()
 
     /** Message court d'une opération ponctuelle (conversion, coffre). */
     private val _status = MutableStateFlow<String?>(null)
@@ -86,6 +101,34 @@ class LibraryViewModel @Inject constructor(
             .onFailure { error -> _status.value = error.message ?: "Mise au coffre impossible" }
     }
 
+    /** Copie le fichier vers la galerie (`Movies/`, `Music/` ou `Download/`). */
+    fun exportToGallery(item: MediaItemEntity) = viewModelScope.launch {
+        val source = localFile(item)
+        if (source == null) {
+            _status.value = "Aucun fichier téléchargé pour ce média"
+            return@launch
+        }
+        _status.value = "Export en cours…"
+        when (val result = gallery.export(source)) {
+            is ExportResult.Saved -> _status.value = "Copie enregistrée dans ${result.path}"
+            ExportResult.PermissionRequired -> {
+                _pendingPermission.value = item
+                _status.value = "Séléné a besoin de l'autorisation de stockage pour écrire dans la galerie."
+            }
+            is ExportResult.Failed -> _status.value = result.message
+        }
+    }
+
+    /** Retour de la demande d'autorisation de stockage (Android 9 et antérieurs). */
+    fun onStoragePermissionResult(granted: Boolean) {
+        val item = _pendingPermission.value
+        _pendingPermission.value = null
+        when {
+            !granted -> _status.value = "Export annulé : autorisation refusée."
+            item != null -> exportToGallery(item)
+        }
+    }
+
     fun clearStatus() {
         _status.value = null
     }
@@ -101,6 +144,15 @@ fun LibraryScreen(viewModel: LibraryViewModel) {
     val items by viewModel.items.collectAsStateWithLifecycle()
     val query by viewModel.query.collectAsStateWithLifecycle()
     val status by viewModel.status.collectAsStateWithLifecycle()
+    val pendingExport by viewModel.pendingPermission.collectAsStateWithLifecycle()
+
+    val storagePermission = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { granted -> viewModel.onStoragePermissionResult(granted) }
+
+    LaunchedEffect(pendingExport) {
+        if (pendingExport != null) storagePermission.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+    }
 
     Column(
         modifier = Modifier
@@ -143,6 +195,9 @@ fun LibraryScreen(viewModel: LibraryViewModel) {
                         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                             TextButton(onClick = { viewModel.convertToAudio(item) }) {
                                 Text("Convertir en M4A")
+                            }
+                            TextButton(onClick = { viewModel.exportToGallery(item) }) {
+                                Text("Vers la galerie")
                             }
                             TextButton(onClick = { viewModel.moveToVault(item) }) {
                                 Text("Coffrer")

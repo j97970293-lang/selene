@@ -148,6 +148,35 @@ class ExternalResolver @Inject constructor(
         )
     }
 
+    /**
+     * Interroge `GET {endpoint}/health` pour dire à l'utilisateur *pourquoi* son pont
+     * ne répond pas : injoignable, jeton refusé, ou schéma incompatible. Trois causes,
+     * trois corrections différentes, et aucun message technique à décoder.
+     */
+    suspend fun healthCheck(): BridgeStatus = withContext(Dispatchers.IO) {
+        val current = config.get()
+        if (current.endpoint.isEmpty() || current.token.isEmpty()) return@withContext BridgeStatus.NotConfigured
+        if (!isTransportAcceptable(current.endpoint)) {
+            return@withContext BridgeStatus.Unavailable(
+                "adresse en clair refusée : HTTPS ou boucle locale attendus",
+            )
+        }
+
+        val request = Request.Builder()
+            .url("${current.endpoint}/health")
+            .header("Authorization", "Bearer ${current.token}")
+            .get()
+            .build()
+
+        runCatching {
+            client.newCall(request).execute().use { response ->
+                BridgeHealth.parse(response.code, response.body?.string())
+            }
+        }.getOrElse { error ->
+            BridgeStatus.Unavailable(error.message?.take(160) ?: "réseau indisponible")
+        }
+    }
+
     private val responseAdapter = MOSHI.adapter(ExternalResponse::class.java)
 
     private fun isTransportAcceptable(endpoint: String): Boolean {

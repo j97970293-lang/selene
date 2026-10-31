@@ -68,7 +68,38 @@ Réponse attendue (schéma stable, versionné) :
 ```
 
 Erreurs : `401` jeton invalide, `422` URL non prise en charge, `503` extracteur indisponible.
-Selene affiche le message renvoyé dans `{"error": "…"}`.
+Séléné affiche le message renvoyé dans `{"error": "…"}`.
+
+## Contrat de diagnostic — `GET /health`
+
+Séléné doit pouvoir répondre à une question simple : « pourquoi mon pont ne marche pas ? »
+Un jeton refusé, une adresse injoignable et un schéma incompatible demandent trois corrections
+différentes. Le bouton **Tester la connexion** (écran Réglages) appelle donc :
+
+```http
+GET /health HTTP/1.1
+Authorization: Bearer <jeton>
+```
+
+```json
+{"status": "ok", "schema": "selene.external/1", "version": "1.2.0"}
+```
+
+Lecture faite par l'application (`resolver/BridgeHealth.kt`, 8 cas JVM) :
+
+| Réponse | Ce qu'affiche Séléné |
+| --- | --- |
+| `200` avec `schema` conforme | « Pont joignable — version 1.2.0 » |
+| `200` avec un autre `schema` | « Pont injoignable : schéma … au lieu de selene.external/1 » |
+| `200` avec `{"error": "…"}` | le message, tel quel |
+| `204` | joignable (le schéma est facultatif sur `/health`) |
+| `401` / `403` | « Jeton refusé par le pont » |
+| `404` | « aucune route /health sur ce service » |
+| autre code | « HTTP 4xx/5xx » |
+| pas de réponse | le message réseau |
+
+Une adresse en clair est refusée avant même l'appel, sauf boucle locale : le jeton ne part
+jamais en clair sur Internet.
 
 ## Côté app — implémenté
 
@@ -84,8 +115,9 @@ Selene affiche le message renvoyé dans `{"error": "…"}`.
 - les réglages sont poussés par `SeleneApp` à chaque changement de DataStore : pas d'appel réseau
   avant que la configuration ne soit connue.
 
-Écran de réglages : trois champs (adresse, jeton, interrupteur). Le bouton d'enregistrement reste
-désactivé tant que l'adresse ou le jeton est vide.
+Écran de réglages : trois champs (adresse, jeton, interrupteur), plus le bouton **Tester la
+connexion** qui affiche le diagnostic ci-dessus. Le bouton d'enregistrement reste désactivé tant
+que l'adresse ou le jeton est vide.
 
 Le registre appelle `ExternalResolver` en **dernier**, après les résolveurs directs, HLS, DASH et
 RSS. Il ne s'active pas par défaut : il faut saisir l'URL du pont, le jeton, et cocher la case.

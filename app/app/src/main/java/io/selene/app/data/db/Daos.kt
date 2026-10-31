@@ -64,7 +64,7 @@ interface TaskDao {
                v.quality_label AS qualityLabel, t.bytes_downloaded AS bytesDownloaded,
                t.bytes_total AS bytesTotal, t.last_error AS lastError,
                t.destination_uri AS destinationUri,
-               t.priority AS priority, t.position AS position
+               t.priority AS priority, t.position AS position, t.export_uri AS exportUri
         FROM download_task t
         JOIN variant v ON v.id = t.variant_id
         JOIN media_item m ON m.id = v.media_id
@@ -79,7 +79,7 @@ interface TaskDao {
                v.quality_label AS qualityLabel, t.bytes_downloaded AS bytesDownloaded,
                t.bytes_total AS bytesTotal, t.last_error AS lastError,
                t.destination_uri AS destinationUri,
-               t.priority AS priority, t.position AS position
+               t.priority AS priority, t.position AS position, t.export_uri AS exportUri
         FROM download_task t
         JOIN variant v ON v.id = t.variant_id
         JOIN media_item m ON m.id = v.media_id
@@ -88,6 +88,10 @@ interface TaskDao {
         """,
     )
     fun observeActive(): Flow<List<TaskRow>>
+
+    /** Mémorise l'adresse de la copie publique, pour l'afficher ensuite dans la liste. */
+    @Query("UPDATE download_task SET export_uri = :uri, updated_at = :now WHERE id = :id")
+    suspend fun setExported(id: String, uri: String, now: Long)
 
     @Query("UPDATE download_task SET state = :state, updated_at = :now WHERE id = :id")
     suspend fun setState(id: String, state: String, now: Long)

@@ -11,13 +11,24 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 /** Télécharge un format yt-dlp, y compris les formats séparés fusionnés par FFmpeg. */
-class YtDlpDownloader {
+class YtDlpDownloader(
+    private val environment: YtDlpEnvironment,
+) {
     suspend fun download(
         pageUrl: String,
         variant: Variant,
         target: File,
         onProgress: suspend (downloaded: Long, total: Long?) -> Unit = { _, _ -> },
     ): File = withContext(Dispatchers.IO) {
+        val startup = environment.ensureReady()
+        if (startup.isFailure) {
+            throw DownloadException(
+                "Moteur yt-dlp indisponible : " + (environment.errorOrNull() ?: "initialisation impossible"),
+                retryable = false,
+                cause = startup.exceptionOrNull(),
+            )
+        }
+
         val formatId = variant.id.removePrefix("yt-dlp:")
         val formatSelector = when (variant.kind) {
             MediaKind.VIDEO -> "$formatId+bestaudio/$formatId"
@@ -40,11 +51,8 @@ class YtDlpDownloader {
                 runBlocking { onProgress(downloaded, total) }
             }
         } catch (error: Exception) {
-            throw DownloadException(
-                error.message?.takeIf { it.isNotBlank() } ?: "yt-dlp n'a pas pu télécharger ce format",
-                retryable = true,
-                cause = error,
-            )
+            val failure = YtDlpErrors.describe(error.message)
+            throw DownloadException(failure.message, retryable = failure.retryable, cause = error)
         }
 
         if (target.isFile) return@withContext target

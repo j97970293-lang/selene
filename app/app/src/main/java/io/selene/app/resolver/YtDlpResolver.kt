@@ -2,6 +2,8 @@ package io.selene.app.resolver
 
 import com.yausername.youtubedl_android.YoutubeDL
 import com.yausername.youtubedl_android.mapper.VideoFormat
+import io.selene.app.downloading.YtDlpEnvironment
+import io.selene.app.downloading.YtDlpErrors
 import io.selene.app.model.DownloadException
 import io.selene.app.model.MediaKind
 import io.selene.app.model.ResolvedMedia
@@ -14,7 +16,9 @@ import javax.inject.Inject
  * Résout les pages prises en charge par yt-dlp. Les URL de fichiers et de manifestes restent
  * traitées par les résolveurs Selene natifs afin de conserver leur reprise par octet/segment.
  */
-class YtDlpResolver @Inject constructor() : MediaResolver {
+class YtDlpResolver @Inject constructor(
+    private val environment: YtDlpEnvironment,
+) : MediaResolver {
     override val id: String = "yt-dlp"
     override val priority: Int = 50
 
@@ -28,14 +32,23 @@ class YtDlpResolver @Inject constructor() : MediaResolver {
     }
 
     override suspend fun resolve(url: String): ResolvedMedia = withContext(Dispatchers.IO) {
+        // Le moteur extrait un interpréteur au premier usage : on vérifie qu'il a
+        // démarré avant de lui confier une adresse, sinon l'erreur serait illisible.
+        val startup = environment.ensureReady()
+        if (startup.isFailure) {
+            throw DownloadException(
+                "Moteur yt-dlp indisponible sur cet appareil : " +
+                    (environment.errorOrNull() ?: "initialisation impossible"),
+                retryable = false,
+                cause = startup.exceptionOrNull(),
+            )
+        }
+
         val info = try {
             YoutubeDL.getInfo(url)
         } catch (error: Exception) {
-            throw DownloadException(
-                error.message?.takeIf { it.isNotBlank() } ?: "yt-dlp n'a pas pu analyser cette adresse",
-                retryable = false,
-                cause = error,
-            )
+            val failure = YtDlpErrors.describe(error.message)
+            throw DownloadException(failure.message, retryable = failure.retryable, cause = error)
         }
 
         val variants = info.formats.orEmpty().mapNotNull(::toVariant).distinctBy { it.id }

@@ -7,19 +7,23 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import io.selene.app.data.SettingsRepository
 import io.selene.app.data.db.SeleneDatabase
+import io.selene.app.data.db.TaskDao
 import io.selene.app.data.db.toVariant
 import io.selene.app.model.TaskState
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.first
 import java.io.File
 
 /**
  * Exécute un téléchargement, avec progression persistée (throttlée) et
  * notification de premier plan.
  *
- * Décision v1 : le fichier est écrit dans `filesDir/media/` (aucune permission
- * de stockage requise) et exposé via FileProvider. L'export vers
- * `Downloads/` par MediaStore est une étape suivante documentée.
+ * Le fichier est écrit dans `filesDir/media/`, lisible par l'application seule, puis
+ * copié vers le stockage partagé (`Movies/`, `Music/`, `Download/`) par
+ * [MediaExporter] si l'export est activé. La copie est facultative : son échec ne
+ * fait pas échouer le téléchargement.
  */
 @HiltWorker
 class DownloadWorker @AssistedInject constructor(
@@ -32,6 +36,8 @@ class DownloadWorker @AssistedInject constructor(
     private val database: SeleneDatabase,
     private val notifier: DownloadNotifier,
     private val slots: io.selene.app.queue.DownloadSlots,
+    private val exporter: MediaExporter,
+    private val settings: SettingsRepository,
 ) : CoroutineWorker(appContext, params) {
 
     override suspend fun doWork(): Result {
@@ -108,6 +114,7 @@ class DownloadWorker @AssistedInject constructor(
 
             taskDao.setCompleted(taskId, Uri.fromFile(file).toString(), file.length(), System.currentTimeMillis())
             notifier.notifyCompleted(taskId, media.title)
+            publishToGallery(taskId, taskDao, file)
             Result.success()
         } catch (cancelled: CancellationException) {
             taskDao.setState(taskId, TaskState.PAUSED.name, System.currentTimeMillis())
@@ -117,6 +124,30 @@ class DownloadWorker @AssistedInject constructor(
             taskDao.setFailed(taskId, message, System.currentTimeMillis())
             notifier.cancel(taskId)
             Result.failure()
+        }
+    }
+
+    /**
+     * Copie le fichier dans le stockage partagé pour qu'il apparaisse dans la
+     * galerie. Un échec ici ne remet pas en cause le téléchargement : le fichier
+     * reste lisible dans Sélène, l'utilisateur peut relancer l'export depuis la
+     * bibliothèque.
+     */
+    private suspend fun publishToGallery(taskId: String, taskDao: TaskDao, file: File) {
+        if (!settings.settings.first().exportToGallery) return
+        when (val result = exporter.export(file)) {
+            is ExportResult.Saved ->
+                taskDao.setExported(taskId, result.uri.toString(), System.currentTimeMillis())
+
+            ExportResult.PermissionRequired -> android.util.Log.i(
+                "DownloadWorker",
+                "Export ignoré : permission de stockage non accordée",
+            )
+
+            is ExportResult.Failed -> android.util.Log.w(
+                "DownloadWorker",
+                "Export vers la galerie impossible : ${result.message}",
+            )
         }
     }
 

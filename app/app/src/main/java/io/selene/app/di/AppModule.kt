@@ -19,6 +19,7 @@ import io.selene.app.downloading.DownloadEngine
 import io.selene.app.downloading.HlsDownloader
 import io.selene.app.downloading.SegmentDownloader
 import io.selene.app.downloading.YtDlpDownloader
+import io.selene.app.downloading.YtDlpEnvironment
 import io.selene.app.resolver.DashResolver
 import io.selene.app.resolver.DirectUrlResolver
 import io.selene.app.feeds.FeedResolver
@@ -50,7 +51,7 @@ object AppModule {
     @Singleton
     fun database(@ApplicationContext context: Context): SeleneDatabase =
         Room.databaseBuilder(context, SeleneDatabase::class.java, "selene.db")
-            .addMigrations(SeleneDatabase.MIGRATION_1_2)
+            .addMigrations(SeleneDatabase.MIGRATION_1_2, SeleneDatabase.MIGRATION_2_3)
             .fallbackToDestructiveMigrationOnDowngrade()
             .build()
 
@@ -95,7 +96,8 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun ytDlpDownloader(): YtDlpDownloader = YtDlpDownloader()
+    fun ytDlpDownloader(environment: YtDlpEnvironment): YtDlpDownloader =
+        YtDlpDownloader(environment)
 
     /**
      * Résolveurs disponibles, du plus spécifique au plus général : HLS avant l'URL directe,

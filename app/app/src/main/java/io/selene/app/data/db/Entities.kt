@@ -76,6 +76,8 @@ data class DownloadTaskEntity(
     val priority: Int = 0,
     /** Ordre choisi par l'utilisateur à l'intérieur d'une même priorité. */
     val position: Long = 0,
+    /** Adresse de la copie publiée dans le stockage partagé, si l'export a réussi. */
+    @ColumnInfo(name = "export_uri") val exportUri: String? = null,
 )
 
 /** Ligne dénormalisée pour l'écran des téléchargements (une seule requête). */
@@ -91,6 +93,7 @@ data class TaskRow(
     val destinationUri: String?,
     val priority: Int = 0,
     val position: Long = 0,
+    val exportUri: String? = null,
 ) {
     val progress: Float?
         get() = bytesTotal?.takeIf { it > 0 }?.let {

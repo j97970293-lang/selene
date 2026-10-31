@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import dagger.hilt.android.AndroidEntryPoint
+import io.selene.app.ui.permission.RequestNotificationPermissionOnce
 import io.selene.app.ui.theme.SeleneTheme
 import io.selene.app.ui.navigation.SeleneNavHost
 
@@ -18,6 +19,9 @@ class MainActivity : ComponentActivity() {
         val incomingUrl = extractUrl(intent)
         setContent {
             SeleneTheme {
+                // Demande unique au premier lancement : sans elle, aucune notification
+                // de téléchargement n'apparaît, ni progression ni fin.
+                RequestNotificationPermissionOnce()
                 SeleneNavHost(initialUrl = incomingUrl)
             }
         }

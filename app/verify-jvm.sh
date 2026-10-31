@@ -68,6 +68,10 @@ echo "→ compilation (sources JVM)"
   "$SRC"/main/java/io/selene/app/queue/QueueOrder.kt \
   "$SRC"/main/java/io/selene/app/queue/DownloadSlots.kt \
   "$SRC/main/java/io/selene/app/downloading/DownloadEngine.kt" \
+  "$SRC/main/java/io/selene/app/downloading/MediaMime.kt" \
+  "$SRC/main/java/io/selene/app/downloading/YtDlpErrors.kt" \
+  "$SRC/main/java/io/selene/app/browser/MediaUrlClassifier.kt" \
+  "$SRC/main/java/io/selene/app/resolver/BridgeHealth.kt" \
   "$SRC/main/java/io/selene/app/downloading/FileNamer.kt" \
   "$SRC/main/java/io/selene/app/downloading/SegmentDownloader.kt" \
   "$SRC/main/java/io/selene/app/downloading/HlsDownloader.kt" \
@@ -77,7 +81,8 @@ echo "→ compilation (sources JVM)"
   "$SRC"/test/java/io/selene/app/imports/*.kt \
   "$SRC"/test/java/io/selene/app/feeds/*.kt \
   "$SRC"/test/java/io/selene/app/vault/*.kt \
-  "$SRC"/test/java/io/selene/app/queue/*.kt
+  "$SRC"/test/java/io/selene/app/queue/*.kt \
+  "$SRC"/test/java/io/selene/app/browser/*.kt
 
 echo "→ tests"
 # Découverte automatique : une classe de test oubliée dans cette liste ne serait jamais exécutée

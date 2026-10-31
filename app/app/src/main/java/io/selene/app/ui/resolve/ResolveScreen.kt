@@ -20,10 +20,12 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -75,8 +77,42 @@ class ResolveViewModel @Inject constructor(
     )
     val state: StateFlow<ResolveUiState> = _state.asStateFlow()
 
+    /**
+     * Lien trouvé dans le presse-papiers. Le réglage « Proposer les liens copiés »
+     * existait dans l'écran de réglages sans être lu nulle part : il est désormais
+     * appliqué ici, et seulement s'il est activé.
+     */
+    private val _suggestion = MutableStateFlow<String?>(null)
+    val suggestion: StateFlow<String?> = _suggestion.asStateFlow()
+
+    private val _clipboardWatch = MutableStateFlow(false)
+    val clipboardWatch: StateFlow<Boolean> = _clipboardWatch.asStateFlow()
+
     init {
+        viewModelScope.launch {
+            _clipboardWatch.value = settings.settings.first().clipboardWatch
+        }
         if (_state.value.url.isNotBlank()) analyze()
+    }
+
+    /** Appelé par l'écran avec le contenu du presse-papiers, quand le réglage est actif. */
+    fun offerFromClipboard(candidate: String?) {
+        val url = candidate?.let { text ->
+            Regex("""https?://\S+""").find(text)?.value?.trimEnd('.', ',', ')', ']')
+        } ?: return
+        if (url == _state.value.url.trim() || url == _suggestion.value) return
+        _suggestion.value = url
+    }
+
+    fun acceptSuggestion() {
+        val url = _suggestion.value ?: return
+        _suggestion.value = null
+        _state.update { it.copy(url = url, error = null) }
+        analyze()
+    }
+
+    fun dismissSuggestion() {
+        _suggestion.value = null
     }
 
     fun onUrlChange(value: String) = _state.update { it.copy(url = value, error = null) }
@@ -152,7 +188,17 @@ fun ResolveScreen(
     onOpenBrowser: () -> Unit = {},
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val suggestion by viewModel.suggestion.collectAsStateWithLifecycle()
+    val clipboardWatch by viewModel.clipboardWatch.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val clipboard = LocalClipboardManager.current
+
+    // Lecture du presse-papiers uniquement si l'utilisateur l'a autorisée, et
+    // seulement quand le champ est vide : rien n'est écrasé à son insu.
+    LaunchedEffect(clipboardWatch, state.url) {
+        if (!clipboardWatch || state.url.isNotBlank()) return@LaunchedEffect
+        viewModel.offerFromClipboard(clipboard.getText()?.text?.toString())
+    }
 
     Column(
         modifier = Modifier
@@ -170,6 +216,21 @@ fun ResolveScreen(
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
             modifier = Modifier.fillMaxWidth(),
         )
+
+        suggestion?.let { url ->
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Text(
+                    "Lien copié : ${if (url.length > 48) url.take(45) + "…" else url}",
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.fillMaxWidth(0.6f),
+                )
+                TextButton(onClick = viewModel::acceptSuggestion) { Text("Utiliser") }
+                TextButton(onClick = viewModel::dismissSuggestion) { Text("Ignorer") }
+            }
+        }
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(

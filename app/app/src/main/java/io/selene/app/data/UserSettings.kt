@@ -20,4 +20,10 @@ data class UserSettings(
     val externalResolverToken: String = "",
     /** Téléchargements simultanés : 1 à 4 (voir [io.selene.app.queue.DownloadSlots]). */
     val downloadSlots: Int = 1,
+    /**
+     * Copie automatique dans la galerie (`Movies/`, `Music/`, `Download/`) à la fin
+     * d'un téléchargement. Activé par défaut : sans cela, un fichier téléchargé
+     * n'existe que dans Séléné, ce qui surprend.
+     */
+    val exportToGallery: Boolean = true,
 )

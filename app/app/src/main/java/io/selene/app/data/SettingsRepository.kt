@@ -31,6 +31,7 @@ class SettingsRepository @Inject constructor(
         val externalEndpoint = stringPreferencesKey("external.endpoint")
         val externalToken = stringPreferencesKey("external.token")
         val downloadSlots = intPreferencesKey("download.slots")
+        val exportToGallery = booleanPreferencesKey("download.export_to_gallery")
     }
 
     val settings: Flow<UserSettings> = context.settingsDataStore.data.map { prefs ->
@@ -45,6 +46,7 @@ class SettingsRepository @Inject constructor(
             externalResolverEndpoint = prefs[Keys.externalEndpoint].orEmpty(),
             externalResolverToken = prefs[Keys.externalToken].orEmpty(),
             downloadSlots = prefs[Keys.downloadSlots] ?: 1,
+            exportToGallery = prefs[Keys.exportToGallery] ?: true,
         )
     }
 
@@ -54,6 +56,10 @@ class SettingsRepository @Inject constructor(
 
     suspend fun setClipboardWatch(enabled: Boolean) = context.settingsDataStore.edit {
         it[Keys.clipboardWatch] = enabled
+    }
+
+    suspend fun setExportToGallery(enabled: Boolean) = context.settingsDataStore.edit {
+        it[Keys.exportToGallery] = enabled
     }
 
     suspend fun setDownloadSlots(slots: Int) = context.settingsDataStore.edit {

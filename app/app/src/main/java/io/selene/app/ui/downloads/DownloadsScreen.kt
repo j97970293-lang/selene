@@ -22,7 +22,14 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.selene.app.data.SettingsRepository
 import io.selene.app.data.db.TaskRow
+import io.selene.app.data.db.TaskDao
 import io.selene.app.downloading.DownloadRepository
+import io.selene.app.downloading.ExportResult
+import io.selene.app.downloading.MediaExporter
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import java.io.File
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
@@ -33,7 +40,38 @@ import javax.inject.Inject
 class DownloadsViewModel @Inject constructor(
     private val downloads: DownloadRepository,
     private val settings: SettingsRepository,
+    private val gallery: MediaExporter,
+    private val taskDao: TaskDao,
 ) : ViewModel() {
+
+    private val _message = MutableStateFlow<String?>(null)
+    val message: StateFlow<String?> = _message.asStateFlow()
+
+    /**
+     * Réexporte un fichier terminé vers le stockage partagé. Utile quand l'export
+     * automatique a échoué (espace, permission) ou quand l'option était désactivée.
+     */
+    fun exportToGallery(task: TaskRow) = viewModelScope.launch {
+        val path = task.destinationUri?.let { android.net.Uri.parse(it).path }
+        val file = path?.let { File(it) }
+        if (file == null || !file.isFile) {
+            _message.value = "Fichier introuvable : il a peut-être été déplacé ou supprimé."
+            return@launch
+        }
+        when (val result = gallery.export(file)) {
+            is ExportResult.Saved -> {
+                taskDao.setExported(task.id, result.uri.toString(), System.currentTimeMillis())
+                _message.value = "Copie enregistrée dans ${result.path}"
+            }
+            ExportResult.PermissionRequired ->
+                _message.value = "Android 9 et antérieurs : autorisez le stockage depuis l'écran Bibliothèque."
+            is ExportResult.Failed -> _message.value = result.message
+        }
+    }
+
+    fun clearMessage() {
+        _message.value = null
+    }
 
     val tasks = downloads.observeTasks()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
@@ -65,6 +103,7 @@ fun DownloadsScreen(
     onPlay: (String) -> Unit,
 ) {
     val tasks by viewModel.tasks.collectAsStateWithLifecycle()
+    val message by viewModel.message.collectAsStateWithLifecycle()
     val active = tasks.filter { it.state in activeStates }
     val finished = tasks.filter { it.state !in activeStates }
 
@@ -74,6 +113,16 @@ fun DownloadsScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
+        message?.let { text ->
+            item {
+                Text(
+                    text,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
+        }
+
         item { Text("En cours", style = MaterialTheme.typography.titleMedium) }
 
         if (active.isEmpty()) {
@@ -105,6 +154,7 @@ fun DownloadsScreen(
                 onCancel = null,
                 onPlay = task.destinationUri?.let { uri -> { onPlay(uri) } },
                 onRemove = { viewModel.remove(task) },
+                onExport = { viewModel.exportToGallery(task) },
                 onUp = { viewModel.moveUp(task) },
                 onDown = { viewModel.moveDown(task) },
                 onBoost = { viewModel.boost(task) },
@@ -124,6 +174,7 @@ private fun TaskCard(
     onUp: (() -> Unit)? = null,
     onDown: (() -> Unit)? = null,
     onBoost: (() -> Unit)? = null,
+    onExport: (() -> Unit)? = null,
 ) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -135,6 +186,10 @@ private fun TaskCard(
 
             task.progress?.let { LinearProgressIndicator(progress = { it }, modifier = Modifier.fillMaxWidth()) }
 
+            if (task.exportUri != null) {
+                Text("Copie dans la galerie", style = MaterialTheme.typography.labelSmall)
+            }
+
             task.lastError?.let {
                 Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
             }
@@ -145,6 +200,9 @@ private fun TaskCard(
                 onResume?.let { TextButton(onClick = it) { Text("Reprendre") } }
                 onCancel?.let { TextButton(onClick = it) { Text("Annuler") } }
                 onRemove?.let { TextButton(onClick = it) { Text("Retirer") } }
+                if (onExport != null && task.exportUri == null) {
+                    TextButton(onClick = onExport) { Text("Vers la galerie") }
+                }
             }
 
             // File priorisée : ▲ / ▼ dans la même bande, ★ pour passer en urgent (priorité 10).
