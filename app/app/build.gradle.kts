@@ -17,6 +17,12 @@ android {
         versionCode = 1
         versionName = "0.1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Seules les deux ABI réellement présentes sur des téléphones sont embarquées.
+        // x86/x86_64 ne servent qu'aux émulateurs et doublaient la taille pour rien.
+        ndk {
+            abiFilters += listOf("arm64-v8a", "armeabi-v7a")
+        }
     }
 
     buildTypes {
@@ -54,12 +60,6 @@ android {
         resources.excludes += "/META-INF/{AL2.0,LGPL2.1}"
     }
 
-    // Seules les deux ABI réellement présentes sur des téléphones sont embarquées.
-    // x86/x86_64 ne servent qu'aux émulateurs : ils doublaient la taille pour rien.
-    ndk {
-        abiFilters += listOf("arm64-v8a", "armeabi-v7a")
-    }
-
     // Un APK par ABI : un téléphone 64 bits ne télécharge pas les bibliothèques 32 bits.
     // C'est le levier principal sur la taille, yt-dlp embarquant un interpréteur Python par ABI.
     splits {
@@ -71,10 +71,6 @@ android {
         }
     }
 
-    // R8 retire les traductions et ressources inutilisées ; les densités d'icônes suivent.
-    androidResources {
-        localeFilters += listOf("fr", "en")
-    }
 }
 
 ksp {
