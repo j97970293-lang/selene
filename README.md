@@ -1,63 +1,90 @@
 # Selene
 
-Application Android de téléchargement et de lecture multimédia — **parité fonctionnelle** avec la
-cible analysée, construite proprement. Dépôt privé, frère de `apk-reverse` (qui reste le dépôt de
-référence du code source clean-room, non modifié).
+Selene est une application Android Kotlin/Compose de résolution et de téléchargement de médias. Elle accepte les fichiers directs, les manifestes HLS/DASH et, désormais, les pages prises en charge par [`yt-dlp`](https://github.com/yt-dlp/yt-dlp).
 
-> Nom : **Séléné** (Σελήνη), déesse grecque de la Lune. Alternatives disponibles si tu préfères :
-> **Nyx**, **Aether**, **Vega**, **Orion**, **Lyra**, **Atlas**.
+L’application est conçue pour télécharger les contenus que l’utilisateur est autorisé à enregistrer. Les conditions d’utilisation et les droits d’auteur de chaque service restent applicables.
 
----
+## Fonctionnalités
 
-## Ce que ce dépôt contient
+- Analyse d’une URL `http(s)` depuis l’application ou via le partage Android.
+- Résolution native des fichiers directs, HLS `.m3u8` et DASH `.mpd`.
+- Résolution des pages avec `yt-dlp`, qui prend en charge un grand nombre de sites et de formats.
+- Choix de la qualité vidéo ou audio avant la mise en file.
+- Fusion automatique des pistes vidéo et audio séparées grâce à FFmpeg.
+- File persistante avec WorkManager, reprise après coupure, pause, annulation, notifications et option Wi-Fi uniquement.
+- Bibliothèque locale et lecture des fichiers téléchargés.
+- Import possible d’un JSON produit par `yt-dlp -J` lorsque l’utilisateur préfère générer les métadonnées ailleurs.
 
-| Bloc | Contenu |
-| --- | --- |
-| `app/` | application Kotlin + Compose, package `io.selene.app`, socle importé de `apk-reverse/app` |
-| `browser/` | navigateur à onglets interne avec détection de médias dans la page |
-| `queue/` | file de téléchargements : parallélisme, priorités, reprise, Wi-Fi seul |
-| `library/` | bibliothèque, recherche locale, sélection multiple, playlists, historique |
-| `vault/` | coffre local protégé par code (fichiers chiffrés dans le dossier privé) |
-| `playback/` | lecteur plein écran, fenêtre flottante (PiP), pistes audio et sous-titres |
-| `sources/` | sources déclaratives : favoris, speed dial, flux RSS/podcast, URL directe |
+## Architecture yt-dlp
 
-## Ce que ce dépôt ne contient pas
+Pour une page qui n’est pas elle-même un fichier média, Selene appelle la bibliothèque Android `youtubedl-android`, qui embarque yt-dlp et Python. `yt-dlp` renvoie les métadonnées et les formats disponibles. Selene les transforme en variantes affichées dans l’interface.
 
-**Aucun moteur d'extraction pour les plateformes qui n'exposent pas de fichier média**
-(YouTube, TikTok, Instagram, Facebook). Cette partie n'est pas reconstruite : elle contourne les
-conditions d'utilisation de ces services, et c'est la seule limite du projet.
+Quand une variante yt-dlp est choisie, le worker lance yt-dlp avec l’URL de la page et le format sélectionné. Pour une vidéo séparée de sa piste audio, le sélecteur utilisé est `format+bestaudio/format`; FFmpeg fusionne ensuite les flux dans le conteneur demandé. Les fichiers directs, HLS et DASH continuent d’utiliser le moteur HTTP segmenté de Selene.
 
-Trois façons d'obtenir un média dont la page n'est pas un fichier : un pont HTTP auto-hébergé
-(`docs/EXTERNAL-RESOLVER.md`), l'import d'une sortie `yt-dlp -J`, ou le passage à une application
-installée (Seal, NewPipe) en un tap. Aucune ne contient de décodeur de page dans ce dépôt.
+La version Android inclut les ABI `armeabi-v7a`, `arm64-v8a`, `x86` et `x86_64`. Le module FFmpeg est inclus pour permettre la fusion des pistes et les post-traitements pris en charge par yt-dlp. Cela augmente sensiblement la taille de l’APK.
 
-Conséquence assumée : Selene télécharge **tout ce qui est un fichier média accessible par URL** —
-MP4, WebM, MKV, M4A, MP3, FLAC, OGG, HLS `.m3u8`, DASH `.mpd`, flux RSS/podcast, PeerTube,
-Archive.org, serveur personnel, ton propre CDN. Il ne télécharge pas une vidéo YouTube à partir de
-sa page.
+## Construire le projet
 
-## Périmètre de parité
-
-Voir `FEATURES.md` : 40 fonctionnalités recensées dans la cible, dont **31 reprises**,
-**5 corrigées** (défauts volontairement non reproduits) et **4 exclues** (dont l'extraction).
-
-## Démarrage
+Prérequis : JDK 17 ou 21, Android SDK avec la plateforme 36 et les build-tools correspondants.
 
 ```bash
-git init
-git add -A
-git commit -m "feat: Selene — parité fonctionnelle, sans extraction tierce"
-git remote add origin git@github.com:j97970293-lang/selene.git
-git push -u origin main
+cd app
+gradle wrapper --gradle-version 8.11   # une seule fois si le wrapper n’existe pas
+echo "sdk.dir=$HOME/Android/Sdk" > local.properties
+./gradlew :app:assembleDebug
 ```
 
-Le dépôt doit être créé **privé** sur GitHub (Settings → General → Danger zone → Change
-visibility, ou à la création).
+L’APK de debug est généré dans `app/app/build/outputs/apk/debug/app-debug.apk`.
 
-## Documents
+Les tests JVM peuvent être lancés sans appareil :
 
-- `FEATURES.md` — matrice de parité complète, fonctionnalité par fonctionnalité
-- `ARCHITECTURE.md` — modules, modèle de données, décisions techniques
-- `BOUNDARY.md` — la frontière exacte, écrite noir sur blanc, et pourquoi
-- `docs/EXTERNAL-RESOLVER.md` — contrat d'API pour brancher un extracteur que tu héberges toi-même
-- `docs/DISCUSSION.md` — « d'autres le font », les arguments traités un par un
+```bash
+cd app
+./verify-jvm.sh
+```
+
+Pour une première compilation Android complète :
+
+```bash
+cd app
+./gradlew :app:testDebugUnitTest :app:assembleDebug
+```
+
+## Utilisation
+
+1. Ouvrir Selene et coller l’adresse d’une page ou d’un fichier média.
+2. Appuyer sur **Analyser**.
+3. Pour une page prise en charge par yt-dlp, choisir la variante vidéo ou audio proposée.
+4. Appuyer sur **Télécharger**. Le travail apparaît dans l’onglet des téléchargements.
+
+Pour transmettre une adresse depuis une autre application, utiliser **Partager → Selene**. Pour importer une sortie déjà générée :
+
+```bash
+yt-dlp -J "https://exemple.org/video" > media.json
+```
+
+Puis choisir **Importer une sortie yt-dlp (.json)** dans Selene.
+
+## Mise à jour de yt-dlp
+
+La bibliothèque Android fournit la version yt-dlp embarquée dans sa dépendance. Pour actualiser yt-dlp, mettre à jour la version `ytdlpAndroid` dans `app/gradle/libs.versions.toml`, puis vérifier la compatibilité des modules `library` et `ffmpeg`.
+
+## Limites et sécurité
+
+Selene ne contourne pas les DRM, les contrôles d’accès, les comptes privés ou les protections techniques. Un échec de yt-dlp peut aussi venir d’une évolution du site, d’une authentification requise, d’un format non supporté par l’appareil ou de l’absence d’une autorisation de téléchargement.
+
+Les pages sont analysées uniquement après une action explicite de l’utilisateur. Les URL de fichiers directs ne sont pas envoyées à yt-dlp : elles passent directement par le résolveur natif. Les fichiers temporaires et les téléchargements sont écrits dans l’espace privé de l’application.
+
+## Structure du dépôt
+
+- `app/app/src/main/java/io/selene/app/resolver/` : résolveurs directs, HLS, DASH, pont externe et yt-dlp.
+- `app/app/src/main/java/io/selene/app/downloading/` : moteur HTTP, worker WorkManager et exécuteur yt-dlp.
+- `app/app/src/main/java/io/selene/app/imports/YtDlpJson.kt` : import du JSON `yt-dlp -J`.
+- `ARCHITECTURE.md` : décisions et organisation du code.
+- `FEATURES.md` : matrice des fonctionnalités.
+- `BOUNDARY.md` : périmètre technique et limites du projet.
+- `app/BUILD.md` : instructions de compilation et de vérification détaillées.
+
+## Licences
+
+Selene doit conserver les obligations des dépendances utilisées. yt-dlp est distribué sous licence [Unlicense](https://github.com/yt-dlp/yt-dlp/blob/master/LICENSE), tandis que `youtubedl-android` et ses composants Android ont leurs propres licences, notamment GPL-3.0 pour la bibliothèque wrapper. Vérifier les fichiers de licence des artefacts avant toute distribution de l’APK.

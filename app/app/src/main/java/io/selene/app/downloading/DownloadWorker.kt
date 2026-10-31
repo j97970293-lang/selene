@@ -27,6 +27,7 @@ class DownloadWorker @AssistedInject constructor(
     private val engine: DownloadEngine,
     private val hlsDownloader: HlsDownloader,
     private val dashDownloader: DashDownloader,
+    private val ytDlpDownloader: YtDlpDownloader,
     private val database: SeleneDatabase,
     private val notifier: DownloadNotifier,
 ) : CoroutineWorker(appContext, params) {
@@ -75,6 +76,13 @@ class DownloadWorker @AssistedInject constructor(
             }
 
             val file = when {
+                variant.id.startsWith("yt-dlp:") -> ytDlpDownloader.download(
+                    pageUrl = media.canonicalUrl,
+                    variant = variant,
+                    target = target,
+                    onProgress = onProgress,
+                )
+
                 isDash -> dashDownloader.download(
                     manifestUrl = variant.url,
                     representationId = variant.id.removePrefix("dash:"),

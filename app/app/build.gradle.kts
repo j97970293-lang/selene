@@ -50,6 +50,10 @@ android {
     packaging {
         resources.excludes += "/META-INF/{AL2.0,LGPL2.1}"
     }
+
+    ndk {
+        abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+    }
 }
 
 ksp {
@@ -93,6 +97,8 @@ dependencies {
     implementation(libs.moshi.kotlin)
     implementation(libs.coil.compose)
     implementation(libs.coroutines.android)
+    implementation(libs.ytdlp.android)
+    implementation(libs.ytdlp.ffmpeg)
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)

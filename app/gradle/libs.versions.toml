@@ -17,6 +17,7 @@ okhttp = "4.12.0"
 moshi = "1.15.1"
 coil = "2.7.0"
 coroutines = "1.9.0"
+ytdlpAndroid = "0.18.1"
 junit = "4.13.2"
 turbine = "1.2.0"
 mockwebserver = "4.12.0"
@@ -59,6 +60,8 @@ moshi = { module = "com.squareup.moshi:moshi", version.ref = "moshi" }
 moshi-kotlin = { module = "com.squareup.moshi:moshi-kotlin", version.ref = "moshi" }
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
 coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
+ytdlp-android = { module = "io.github.junkfood02.youtubedl-android:library", version.ref = "ytdlpAndroid" }
+ytdlp-ffmpeg = { module = "io.github.junkfood02.youtubedl-android:ffmpeg", version.ref = "ytdlpAndroid" }
 coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
 
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }

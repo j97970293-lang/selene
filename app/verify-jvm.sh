@@ -55,7 +55,13 @@ echo "→ compilation (sources JVM)"
 "$KOTLINC" -J-Xmx750m -cp "$CP" -jvm-target 11 -d "$OUT" \
   "$SRC/main/java/io/selene/app/model/Models.kt" \
   "$SRC/main/java/io/selene/app/data/UserSettings.kt" \
-  "$SRC"/main/java/io/selene/app/resolver/*.kt \
+  "$SRC/main/java/io/selene/app/resolver/DashManifestParser.kt" \
+  "$SRC/main/java/io/selene/app/resolver/DashResolver.kt" \
+  "$SRC/main/java/io/selene/app/resolver/DirectUrlResolver.kt" \
+  "$SRC/main/java/io/selene/app/resolver/ExternalResolver.kt" \
+  "$SRC/main/java/io/selene/app/resolver/HlsResolver.kt" \
+  "$SRC/main/java/io/selene/app/resolver/MediaResolver.kt" \
+  "$SRC/main/java/io/selene/app/resolver/PlaylistParser.kt" \
   "$SRC"/main/java/io/selene/app/imports/*.kt \
   "$SRC/main/java/io/selene/app/downloading/DownloadEngine.kt" \
   "$SRC/main/java/io/selene/app/downloading/FileNamer.kt" \

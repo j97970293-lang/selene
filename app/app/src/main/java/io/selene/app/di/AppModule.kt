@@ -16,12 +16,14 @@ import io.selene.app.downloading.DashDownloader
 import io.selene.app.downloading.DownloadEngine
 import io.selene.app.downloading.HlsDownloader
 import io.selene.app.downloading.SegmentDownloader
+import io.selene.app.downloading.YtDlpDownloader
 import io.selene.app.resolver.DashResolver
 import io.selene.app.resolver.DirectUrlResolver
 import io.selene.app.resolver.ExternalResolver
 import io.selene.app.resolver.HlsResolver
 import io.selene.app.resolver.MediaResolver
 import io.selene.app.resolver.ResolverRegistry
+import io.selene.app.resolver.YtDlpResolver
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
@@ -82,6 +84,10 @@ object AppModule {
         segments: SegmentDownloader,
     ): DashDownloader = DashDownloader(client, engine, segments)
 
+    @Provides
+    @Singleton
+    fun ytDlpDownloader(): YtDlpDownloader = YtDlpDownloader()
+
     /**
      * Résolveurs disponibles, du plus spécifique au plus général : HLS avant l'URL directe,
      * qui accepterait n'importe quelle adresse `http(s)`. L'ensemble est extensible sans
@@ -94,8 +100,9 @@ object AppModule {
         hls: HlsResolver,
         dash: DashResolver,
         external: ExternalResolver,
+        ytDlp: YtDlpResolver,
     ): ResolverRegistry {
-        val resolvers: Set<MediaResolver> = setOf(direct, hls, dash, external)
+        val resolvers: Set<MediaResolver> = setOf(direct, hls, dash, external, ytDlp)
         return ResolverRegistry(resolvers)
     }
 }

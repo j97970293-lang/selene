@@ -3,6 +3,8 @@ package io.selene.app
 import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
+import com.yausername.ffmpeg.FFmpeg
+import com.yausername.youtubedl_android.YoutubeDL
 import dagger.hilt.android.HiltAndroidApp
 import io.selene.app.data.SettingsRepository
 import io.selene.app.resolver.ExternalResolver
@@ -38,6 +40,12 @@ class SeleneApp : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
+        runCatching {
+            YoutubeDL.init(this)
+            FFmpeg.init(this)
+        }.onFailure {
+            android.util.Log.e("SeleneApp", "Initialisation yt-dlp impossible", it)
+        }
         // Le résolveur externe ne peut pas lire DataStore de façon synchrone : ses réglages lui
         // sont poussés dès qu'ils changent. Tant que ce n'est pas fait, `matches` renvoie faux,
         // donc aucune adresse ne peut partir vers un pont par accident.

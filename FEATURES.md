@@ -26,7 +26,7 @@ Aucune ligne de code, aucune ressource, aucun texte de la cible n'est utilisée.
 | 12 | Aperçu avant téléchargement | repris | vignette + durée + taille estimée |
 | 13 | Choix du dossier de destination | repris | SAF (`ACTION_OPEN_DOCUMENT_TREE`) |
 | 14 | Téléchargement d'un manifeste HLS/DASH | repris | segmentation, concaténation, reprise par segment (`.ts` / piste MP4) |
-| 15 | Extraction d'une page non média (YouTube, TikTok…) | **exclu** | contournement de CGU — voir `BOUNDARY.md` |
+| 15 | Extraction d'une page non média via yt-dlp | repris | yt-dlp embarqué, formats affichés puis téléchargement local — voir `BOUNDARY.md` |
 | 15b | Passerelle vers un extracteur auto-hébergé | **hors app, client livré** | `ExternalResolver` implémenté + testé ; le pont est fourni par l'utilisateur — `docs/EXTERNAL-RESOLVER.md` |
 
 ## File de téléchargements

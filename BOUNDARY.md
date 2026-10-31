@@ -4,9 +4,7 @@ Ce document existe pour éviter toute ambiguïté, pour toi comme pour quiconque
 
 ## Ce que Selene fait
 
-Selene télécharge des fichiers média à partir d'URL. Un fichier média est une ressource dont le
-serveur annonce le type et le contenu : `video/*`, `audio/*`, un manifeste HLS/DASH, une entrée
-d'enclosure dans un flux RSS, un lien exposé par une API documentée.
+Selene télécharge des fichiers média à partir d'URL et peut résoudre certaines pages avec yt-dlp. Un fichier média est une ressource dont le serveur annonce le type et le contenu : `video/*`, `audio/*`, un manifeste HLS/DASH, une entrée d'enclosure dans un flux RSS, ou un lien exposé par une API documentée.
 
 ```
 URL → HEAD → Content-Type / playlist / API → file d'attente → fichier local
@@ -18,16 +16,11 @@ Selene **ne casse pas** de protection d'accès, **ne contourne pas** de limitati
 **ne rejoue pas** de protocole privé pour obtenir un flux qu'une plateforme ne met pas à
 disposition.
 
-Concrètement : coller `https://www.youtube.com/watch?v=…` dans Selene produit une erreur claire
-(`type de contenu non pris en charge : text/html`). Ce n'est pas un bug à corriger, c'est la
-frontière.
+Concrètement : yt-dlp peut résoudre une page prise en charge, mais Selene ne promet pas qu'un site fonctionnera toujours. Une erreur peut venir d'un changement du site, d'une authentification ou d'une restriction de téléchargement.
 
 ## Pourquoi cette frontière, en une phrase
 
-Parce que la valeur de la cible vient précisément de cette partie, et que cette partie consiste à
-obtenir des flux vidéo que les plateformes réservent à la lecture dans leur propre lecteur, en
-violation de leurs conditions d'utilisation. Un projet qui la réimplémente est attaquable quelle
-que soit la qualité de son code ; un projet qui s'arrête à la frontière ne l'est pas.
+Parce que Selene ne doit pas casser une protection d'accès ni contourner une restriction technique. yt-dlp est utilisé comme bibliothèque de résolution locale, uniquement après une action explicite de l'utilisateur et dans le respect des droits et conditions applicables.
 
 ## Ce qui reste parfaitement dans le périmètre
 
@@ -40,7 +33,7 @@ que soit la qualité de son code ; un projet qui s'arrête à la frontière ne l
 | Archive.org, Wikimedia Commons | ✅ | contenus sous licence libre |
 | Serveur personnel, Nextcloud, WebDAV | ✅ | tes fichiers, ton authentification |
 | API d'une plateforme autorisant le téléchargement | ✅ | à brancher derrière `MediaResolver` |
-| Page YouTube / TikTok / Instagram | ❌ | hors périmètre, définitif |
+| Page prise en charge par yt-dlp | ✅ | résolue localement par yt-dlp, dans les limites du service et des droits de l’utilisateur |
 
 ## Extension prévue
 
@@ -62,18 +55,18 @@ sait s'y brancher, rien de plus.
 État : le **client est écrit et testé** (`ExternalResolver.kt`, 10 tests JVM). Le pont, lui, reste
 à ta charge.
 
-C'est la limite exacte de ce que je peux faire : te donner un client propre, pas l'extracteur.
+Le pont externe reste optionnel : l'extracteur local yt-dlp est désormais fourni directement par l'application.
 
-## Troisième voie, sans serveur : importer une sortie `yt-dlp -J`
+## yt-dlp embarqué et import JSON
 
-Si tu préfères ne rien héberger, tu lances toi-même `yt-dlp -J <adresse>` sur la machine de ton
-choix, tu obtiens un fichier JSON, et Selene l'importe (bouton « Importer une sortie yt-dlp »).
+Selene embarque désormais yt-dlp via `youtubedl-android`. Pour une page non directe, l'application appelle yt-dlp après l'action explicite de l'utilisateur, affiche les formats, puis lance yt-dlp dans le worker de téléchargement.
+
+Si tu préfères générer les métadonnées ailleurs, tu peux aussi lancer `yt-dlp -J <adresse>` sur la machine de ton choix et importer le fichier JSON avec le bouton « Importer une sortie yt-dlp ».
 Il en tire le titre, la durée, la vignette, les variantes vidéo et audio, les sous-titres et les
 en-têtes HTTP nécessaires, puis télécharge avec son moteur.
 
-Selene ne lance pas yt-dlp, ne l'embarque pas, ne le télécharge pas. Il lit un format de sortie
-public, comme il lirait un flux RSS. La différence avec les deux autres voies est la même :
-l'extraction reste chez toi.
+Dans ce mode JSON, Selene ne lance pas yt-dlp : il lit un format de sortie public et documenté.
+Dans le mode normal, l'extraction est réalisée par yt-dlp embarqué.
 
 ## Ce point a été discuté
 
