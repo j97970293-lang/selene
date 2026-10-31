@@ -55,15 +55,18 @@ jobs:
         with:
           gradle-version: "8.11"
 
-      - name: Compiler l'APK
+      - name: Compiler l'APK (release minifié, un APK par ABI)
         working-directory: app
-        run: gradle :app:assembleDebug --no-daemon --stacktrace
+        run: |
+          gradle :app:assembleRelease --no-daemon --stacktrace
+          echo "=== taille des APK produits ==="
+          find app/build/outputs/apk -name '*.apk' -exec du -h {} \;
 
       - name: Publier l'APK
         uses: actions/upload-artifact@v4
         with:
-          name: selene-debug-apk
-          path: app/app/build/outputs/apk/debug/*.apk
+          name: selene-apk
+          path: app/app/build/outputs/apk/release/*.apk
           if-no-files-found: error
           retention-days: 14
 

@@ -8,3 +8,16 @@
 
 # Room génère du code référencé par réflexion via les DAO
 -keep class * extends androidx.room.RoomDatabase { <init>(); }
+
+# kotlin-reflect + Moshi réfléctif : sans ces métadonnées, les adaptateurs DTO cassent
+-keepattributes *Annotation*, InnerClasses, Signature, RuntimeVisibleAnnotations, KotlinMetadata
+-keep class kotlin.Metadata { *; }
+-keep class io.selene.app.imports.** { *; }
+-keep class io.selene.app.resolver.ExternalVariant { *; }
+-keep class io.selene.app.resolver.ExternalResponse { *; }
+-keep class io.selene.app.resolver.ExternalSubtitle { *; }
+
+-dontwarn okhttp3.internal.platform.**
+-dontwarn org.conscrypt.**
+-dontwarn org.bouncycastle.**
+-dontwarn org.openjsse.**

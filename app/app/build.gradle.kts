@@ -25,6 +25,9 @@ android {
             isMinifyEnabled = false
         }
         release {
+            // Signé avec la clé de debug : l'APK est installable tel quel, sans secret dans la CI.
+            // À remplacer par une vraie clé le jour d'une publication sur un store.
+            signingConfig = signingConfigs.getByName("debug")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
@@ -51,8 +54,26 @@ android {
         resources.excludes += "/META-INF/{AL2.0,LGPL2.1}"
     }
 
+    // Seules les deux ABI réellement présentes sur des téléphones sont embarquées.
+    // x86/x86_64 ne servent qu'aux émulateurs : ils doublaient la taille pour rien.
     ndk {
-        abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+        abiFilters += listOf("arm64-v8a", "armeabi-v7a")
+    }
+
+    // Un APK par ABI : un téléphone 64 bits ne télécharge pas les bibliothèques 32 bits.
+    // C'est le levier principal sur la taille, yt-dlp embarquant un interpréteur Python par ABI.
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("arm64-v8a", "armeabi-v7a")
+            isUniversalApk = false
+        }
+    }
+
+    // R8 retire les traductions et ressources inutilisées ; les densités d'icônes suivent.
+    androidResources {
+        localeFilters += listOf("fr", "en")
     }
 }
 
