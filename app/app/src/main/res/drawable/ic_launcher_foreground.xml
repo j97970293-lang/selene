@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Croissant de Séléné : deux disques soustraits (evenOdd) + une étoile.
+     Canevas adaptatif 108x108, le motif tient dans la zone sûre de 66 dp. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <path
+        android:fillColor="#F3E9D2"
+        android:fillType="evenOdd"
+        android:pathData="M54,30 A22,22 0 1,0 54,74 A22,22 0 1,0 54,30 Z M64,32 A18,18 0 1,0 64,68 A18,18 0 1,0 64,32 Z" />
+
+    <path
+        android:fillColor="#F3E9D2"
+        android:pathData="M74,26 L76.4,32.6 L83,35 L76.4,37.4 L74,44 L71.6,37.4 L65,35 L71.6,32.6 Z" />
+
+    <path
+        android:fillColor="#8FA9D8"
+        android:pathData="M36,74 L37.8,78.2 L42,80 L37.8,81.8 L36,86 L34.2,81.8 L30,80 L34.2,78.2 Z" />
+</vector>
