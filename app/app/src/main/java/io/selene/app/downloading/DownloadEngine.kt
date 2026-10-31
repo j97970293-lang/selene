@@ -63,7 +63,10 @@ class DownloadEngine(
             }
 
             if (attempt < maxAttempts) {
-                val backoff = initialBackoffMs * (1L shl (attempt - 1)).coerceAtMost(30_000)
+                // Le serveur a le dernier mot : s'il annonce Retry-After, on l'écoute, dans la
+                // limite de MAX_BACKOFF — insister plus tôt ne fait qu'aggraver la limitation.
+                val exponential = initialBackoffMs * (1L shl (attempt - 1))
+                val backoff = (lastError?.retryAfterMs ?: exponential).coerceIn(0L, MAX_BACKOFF_MS)
                 sleeper(backoff)
             }
         }
@@ -93,6 +96,7 @@ class DownloadEngine(
                 !response.isSuccessful -> throw DownloadException(
                     "HTTP ${response.code}",
                     retryable = response.code >= 500 || response.code == 408 || response.code == 429,
+                    retryAfterMs = parseRetryAfter(response.header("Retry-After")),
                 )
 
                 response.code == 200 && offset > 0 -> {
@@ -132,6 +136,21 @@ class DownloadEngine(
         }
     }
 
+    /**
+     * `Retry-After` s'exprime en secondes ou en date HTTP ; on plafonne à une minute pour ne pas
+     * immobiliser la file sur une valeur aberrante.
+     */
+    private fun parseRetryAfter(raw: String?): Long? {
+        if (raw.isNullOrBlank()) return null
+        raw.trim().toLongOrNull()?.let { seconds -> return (seconds * 1000).coerceIn(0L, 60_000) }
+        val date = runCatching {
+            java.text.SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", java.util.Locale.US)
+                .parse(raw.trim())
+                ?.time
+        }.getOrNull() ?: return null
+        return (date - System.currentTimeMillis()).coerceIn(0L, 60_000)
+    }
+
     private fun parseTotal(contentRange: String?, offset: Long, contentLength: Long): Long? {
         // Content-Range: bytes 100-999/1000
         contentRange?.substringAfterLast('/')?.toLongOrNull()?.let { return it }
@@ -148,3 +167,6 @@ class DownloadEngine(
         }
     }
 }
+
+// Plafond commun aux reprises : au-delà, mieux vaut rendre la main à l'utilisateur.
+private const val MAX_BACKOFF_MS = 30_000L

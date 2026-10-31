@@ -61,7 +61,7 @@ contenant des virgules, piste audio `DEFAULT=YES`, refus explicite d'un flux `AE
 | --- | --- |
 | Package | `io.selene.app` — 37 fichiers `.kt`, arborescences cohérentes |
 | Cœur non-Android | **compilé** avec kotlinc 2.0.21, 0 erreur, 0 avertissement bloquant |
-| Tests JVM | **81 tests, 81 verts** (`./verify-jvm.sh`) |
+| Tests JVM | **90 tests, 90 verts, 10 classes** (`./verify-jvm.sh`) |
 | APK | **non produit** — voir ci-dessous |
 | APK, pourquoi | cet atelier a un JDK 11 (AGP 8.7 exige 17+), aucun SDK Android, 1 Go de RAM |
 
@@ -79,6 +79,10 @@ gradle wrapper --gradle-version 8.11
 echo "sdk.dir=$HOME/Android/Sdk" > local.properties
 ./gradlew :app:assembleDebug
 ```
+
+Le script **découvre** désormais les classes de test compilées au lieu de les lister à la main :
+une classe oubliée dans l'ancienne liste n'était jamais exécutée (c'est arrivé avec
+`ResolverRegistryTest`).
 
 ## Nouveaux modules testés sur JVM
 

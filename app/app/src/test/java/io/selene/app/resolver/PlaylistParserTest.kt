@@ -125,6 +125,28 @@ class PlaylistParserTest {
     }
 
     @Test
+    fun `un segment d initialisation EXT-X-MAP est reconnu et resolu`() {
+        val fmp4 = """
+            #EXTM3U
+            #EXT-X-MAP:URI="init.mp4"
+            #EXTINF:6.0,
+            seg1.m4s
+            #EXTINF:6.0,
+            seg2.m4s
+        """.trimIndent()
+
+        val playlist = PlaylistParser.parse(fmp4, "https://cdn.example.com/vod/index.m3u8")
+        assertEquals("https://cdn.example.com/vod/init.mp4", playlist.mapUri)
+        assertEquals(2, playlist.segmentCount)
+    }
+
+    @Test
+    fun `sans EXT-X-MAP le champ reste vide`() {
+        val playlist = PlaylistParser.parse(media, "https://cdn.example.com/vod/1080/index.m3u8")
+        assertNull(playlist.mapUri)
+    }
+
+    @Test
     fun `une reference absolue n est pas alteree`() {
         assertEquals(
             "https://autre.example.com/a/b.ts",

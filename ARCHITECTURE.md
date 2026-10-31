@@ -94,5 +94,14 @@ Migration 3 : `download_task.priority`, `download_task.segment_index`, `download
 | 8. Finitions | à faire |
 
 Moteur segmenté commun : `SegmentDownloader` sert HLS et DASH (reprise par segment, état `.seg`).
+
+### Limites connues, écrites pour ne pas être découvertes en production
+
+| Limite | Conséquence | Contournement |
+| --- | --- | --- |
+| HLS maître + fMP4 | l'extension est décidée avant le téléchargement : un manifeste **maître** dont les variantes sont fMP4 est nommé `.ts` | le fichier reste lisible ; un manifeste média simple est correctement nommé `.mp4` |
+| DASH `SegmentBase` + `indexRange` | non géré (segmentation par index) | rare hors contenus DRM |
+| Concurrence | `WorkManager` sérialise : un seul téléchargement actif à la fois | le réglage 1→4 reste à câbler |
+| Conversion | AAC (`.m4a`) uniquement ; pas de MP3 (encodeur natif absent d'Android) | — |
 Rien n'est compilé dans cet atelier : ni JDK 17+ ni SDK 36. La logique des deux parseurs a été
 validée hors Kotlin, sur fixtures, avant livraison.

@@ -66,6 +66,35 @@ class ExternalResolverTest {
     }
 
     @Test
+    fun `un pont en clair sur internet est refuse`() {
+        val resolver = ExternalResolver(OkHttpClient()).apply {
+            applySettings(
+                UserSettings(
+                    externalResolverEnabled = true,
+                    externalResolverEndpoint = "http://pont.example.com",
+                    externalResolverToken = "jeton",
+                ),
+            )
+        }
+        // Le jeton ne doit pas partir en clair sur le réseau.
+        assertFalse(resolver.matches("https://exemple.tld/page"))
+    }
+
+    @Test
+    fun `un pont en clair sur la boucle locale reste accepte`() {
+        val resolver = ExternalResolver(OkHttpClient()).apply {
+            applySettings(
+                UserSettings(
+                    externalResolverEnabled = true,
+                    externalResolverEndpoint = "http://127.0.0.1:8080",
+                    externalResolverToken = "jeton",
+                ),
+            )
+        }
+        assertTrue(resolver.matches("https://exemple.tld/page"))
+    }
+
+    @Test
     fun `un fichier media direct ne passe jamais par le pont`() {
         val resolver = resolver()
         assertFalse(resolver.matches("https://cdn.tld/video.mp4"))

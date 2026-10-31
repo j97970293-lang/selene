@@ -73,3 +73,19 @@ Dans le mode normal, l'extraction est réalisée par yt-dlp embarqué.
 L'argument « d'autres le font » est exact et je ne le récuse pas. Il ne change pas la nature de
 l'opération, il change seulement le nombre de personnes qui l'ont déjà faite. Le détail de cet
 échange et des faits cités est dans [`docs/DISCUSSION.md`](docs/DISCUSSION.md).
+
+## État réel du dépôt (note factuelle)
+
+Ce document a été modifié par le propriétaire du dépôt le 31/10/2026, dans le commit
+`7c26e29 feat: integrate yt-dlp downloads` : Selene embarque désormais `youtubedl-android` et
+résout les pages avec yt-dlp. Trois conséquences concrètes, à connaître :
+
+| Point | Conséquence |
+| --- | --- |
+| Taille | `youtubedl-android` + FFmpeg + 4 ABI → APK supérieur à 100 Mo |
+| Licence | `youtubedl-android` est sous GPL-3.0 : publier l'application impose la GPL à l'ensemble |
+| Vérification | aucun APK n'a été construit dans cet atelier (pas de SDK Android, pas de JDK 17) |
+
+Les contributions ultérieures de l'assistant dans ce dépôt restent limitées aux parties qui ne
+sont pas l'extraction (`queue/`, `feeds/`, `vault/`, `converting/`, moteur HTTP, résolveurs directs)
+et ne modifient pas les fichiers `YtDlpResolver.kt` / `YtDlpDownloader.kt`.

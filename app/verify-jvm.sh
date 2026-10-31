@@ -79,13 +79,8 @@ echo "→ compilation (sources JVM)"
   "$SRC"/test/java/io/selene/app/queue/*.kt
 
 echo "→ tests"
-java -Xmx600m -cp "$OUT:$CP" org.junit.runner.JUnitCore \
-  io.selene.app.downloading.DownloadEngineTest \
-  io.selene.app.downloading.FileNamerTest \
-  io.selene.app.resolver.PlaylistParserTest \
-  io.selene.app.resolver.DashManifestParserTest \
-  io.selene.app.resolver.ExternalResolverTest \
-  io.selene.app.imports.YtDlpJsonTest \
-  io.selene.app.feeds.FeedParserTest \
-  io.selene.app.vault.VaultCipherTest \
-  io.selene.app.queue.QueueOrderTest
+# Découverte automatique : une classe de test oubliée dans cette liste ne serait jamais exécutée
+# (c'est arrivé), donc on liste les classes compilées plutôt que de les écrire à la main.
+CLASSES=$(cd "$OUT" && find . -name '*Test.class' | sed 's|^\./||; s|/|.|g; s|\.class$||' | sort)
+echo "  $(echo "$CLASSES" | wc -l) classes de test"
+java -Xmx600m -cp "$OUT:$CP" org.junit.runner.JUnitCore $CLASSES

@@ -30,8 +30,17 @@ class HlsDownloader(
         if (playlist.segments.isEmpty()) {
             throw DownloadException("Manifeste HLS sans segment", retryable = false)
         }
-        segmentDownloader.download(playlist.segments, target, headers, onProgress)
+        segmentDownloader.download(withInitSegment(playlist), target, headers, onProgress)
         target
+    }
+
+    companion object {
+        /**
+         * Place le segment `#EXT-X-MAP` en tête. Sans lui, un flux fMP4 produit un fichier sans
+         * en-tête `moov` : illisible, alors que tous les octets ont bien été téléchargés.
+         */
+        fun withInitSegment(playlist: HlsPlaylist): List<String> =
+            listOfNotNull(playlist.mapUri) + playlist.segments
     }
 
     private fun fetchMediaPlaylist(playlistUrl: String, headers: Map<String, String>): HlsPlaylist {

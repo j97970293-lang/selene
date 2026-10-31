@@ -21,6 +21,8 @@ data class HlsPlaylist(
     val durationMs: Long = 0,
     /** GROUP-ID → code de langue, pour rattacher une piste audio à sa variante. */
     val audioLanguages: Map<String, String> = emptyMap(),
+    /** `#EXT-X-MAP` : segment d'initialisation d'un flux fMP4, à écrire avant les segments. */
+    val mapUri: String? = null,
 ) {
     val segmentCount: Int get() = segments.size
 }
@@ -52,6 +54,7 @@ object PlaylistParser {
         var durationSeconds = 0.0
         var pendingDuration = 0.0
         var pendingStreamAttrs: Map<String, String>? = null
+        var mapUri: String? = null
         var encrypted = false
 
         for (line in lines) {
@@ -84,6 +87,11 @@ object PlaylistParser {
                     // METHOD=NONE est autorisé ; toute autre méthode signifie un flux protégé.
                     val method = parseAttributes(line.substringAfter(':'))["METHOD"].orEmpty()
                     if (!method.equals("NONE", ignoreCase = true)) encrypted = true
+                }
+
+                line.startsWith("#EXT-X-MAP:") -> {
+                    val attrs = parseAttributes(line.substringAfter(':'))
+                    mapUri = attrs["URI"]?.let { absolute(baseUrl, it) }
                 }
 
                 line.startsWith("#EXTINF:") -> {
@@ -130,6 +138,7 @@ object PlaylistParser {
             segments = segments,
             durationMs = (durationSeconds * 1000).toLong(),
             audioLanguages = audioLanguages,
+            mapUri = mapUri,
         )
     }
 

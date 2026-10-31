@@ -1,6 +1,7 @@
 package io.selene.app.resolver
 
 import io.selene.app.model.ResolvedMedia
+import io.selene.app.model.UnsupportedContentException
 import kotlinx.coroutines.CancellationException
 
 /**
@@ -26,6 +27,10 @@ interface MediaResolver {
     /** Résout l'URL en un média et ses variantes. Peut lancer un appel réseau. */
     suspend fun resolve(url: String): ResolvedMedia
 }
+
+private const val UNSUPPORTED_HINT =
+    "Ce lien renvoie une page web, pas un fichier média. Utilisez « Importer une sortie " +
+        "yt-dlp », la source externe, ou le partage vers une autre application."
 
 class NoResolverException(url: String) :
     IllegalArgumentException("Aucune source ne sait traiter cette adresse : $url")
@@ -53,16 +58,20 @@ class ResolverRegistry(
         val resolvers = candidates(normalized)
         if (resolvers.isEmpty()) throw NoResolverException(normalized)
 
-        var firstError: Exception? = null
+        val errors = mutableListOf<Exception>()
         for (resolver in resolvers) {
             try {
                 return resolver.resolve(normalized)
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (error: Exception) {
-                if (firstError == null) firstError = error
+                errors += error
             }
         }
-        throw firstError ?: NoResolverException(normalized)
+
+        // Une erreur précise (404, 403, réseau) vaut mieux qu'un « type non pris en charge » :
+        // c'est celle qui dit à l'utilisateur quoi faire.
+        errors.firstOrNull { it !is UnsupportedContentException }?.let { throw it }
+        throw UnsupportedContentException(UNSUPPORTED_HINT)
     }
 }

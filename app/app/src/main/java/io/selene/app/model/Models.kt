@@ -65,8 +65,16 @@ data class DownloadTask(
 }
 
 /** Erreur de téléchargement classée : conditionne la stratégie de reprise. */
-class DownloadException(
+open class DownloadException(
     message: String,
     val retryable: Boolean,
     cause: Throwable? = null,
+    /** Délai demandé par le serveur (`Retry-After`), en millisecondes. */
+    val retryAfterMs: Long? = null,
 ) : Exception(message, cause)
+
+/**
+ * Le contenu existe mais n'est pas un média exploitable (page HTML, JSON, erreur applicative).
+ * Distinct d'un échec réseau : la source ne sait simplement pas traiter cette adresse.
+ */
+class UnsupportedContentException(message: String) : DownloadException(message, retryable = false)

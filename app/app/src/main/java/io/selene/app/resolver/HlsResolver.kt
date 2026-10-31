@@ -52,7 +52,8 @@ class HlsResolver @Inject constructor(
                     Variant(
                         id = "$id:${playlist.segmentCount}",
                         kind = MediaKind.VIDEO,
-                        container = "ts",
+                        // fMP4 (#EXT-X-MAP) = vrai MP4 ; sinon TS, et on l'annonce tel quel.
+                        container = if (playlist.mapUri != null) "mp4" else "ts",
                         qualityLabel = null,
                         sizeBytes = null,
                         url = cleaned,

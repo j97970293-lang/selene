@@ -1,6 +1,7 @@
 package io.selene.app.resolver
 
 import io.selene.app.model.DownloadException
+import io.selene.app.model.UnsupportedContentException
 import io.selene.app.model.MediaKind
 import io.selene.app.model.ResolvedMedia
 import io.selene.app.model.Variant
@@ -52,9 +53,8 @@ class DirectUrlResolver @Inject constructor(
                 mime.startsWith("video/") -> MediaKind.VIDEO
                 mime.startsWith("audio/") -> MediaKind.AUDIO
                 mime == "application/octet-stream" || mime.isEmpty() -> MediaKind.VIDEO
-                else -> throw DownloadException(
+                else -> throw UnsupportedContentException(
                     "Type de contenu non pris en charge : ${mime.ifEmpty { "inconnu" }}",
-                    retryable = false,
                 )
             }
 

@@ -9,6 +9,7 @@ import io.selene.app.model.Variant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -54,6 +55,9 @@ class ExternalResolver @Inject constructor(
     override fun matches(url: String): Boolean {
         val current = config.get()
         if (!current.enabled || current.endpoint.isEmpty() || current.token.isEmpty()) return false
+        // Un jeton ne doit jamais partir en clair sur le réseau : HTTPS exigé, sauf pour un pont
+        // qui tourne sur la machine elle-même (boucle locale ou émulateur).
+        if (!isTransportAcceptable(current.endpoint)) return false
         val cleaned = url.trim()
         if (!cleaned.startsWith("http://", true) && !cleaned.startsWith("https://", true)) return false
         // Un fichier média se télécharge sans pont : inutile d'exposer l'adresse à un service tiers.
@@ -146,6 +150,12 @@ class ExternalResolver @Inject constructor(
 
     private val responseAdapter = MOSHI.adapter(ExternalResponse::class.java)
 
+    private fun isTransportAcceptable(endpoint: String): Boolean {
+        val parsed = runCatching { endpoint.toHttpUrl() }.getOrNull() ?: return false
+        if (parsed.isHttps) return true
+        return parsed.host in LOOPBACK_HOSTS
+    }
+
     private data class ExternalConfig(
         val enabled: Boolean = false,
         val endpoint: String = "",
@@ -160,6 +170,8 @@ class ExternalResolver @Inject constructor(
             com.squareup.moshi.Moshi.Builder()
                 .add(com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory())
                 .build()
+
+        val LOOPBACK_HOSTS = setOf("localhost", "127.0.0.1", "::1", "10.0.2.2")
 
         val DIRECT_EXTENSIONS = listOf(
             ".mp4", ".m4v", ".webm", ".mkv", ".mov", ".avi",
