@@ -73,16 +73,19 @@ class YtDlpEnvironment @Inject constructor(
      */
     suspend fun update(): Result<String> = withContext(Dispatchers.IO) {
         val startup = ensureReady()
-        if (startup.isFailure) {
-            val error = startup.exceptionOrNull() ?: IllegalStateException("yt-dlp indisponible")
-            return@withContext Result.failure(error)
+        val failure = startup.exceptionOrNull()
+        if (failure != null) {
+            return@withContext Result.failure<String>(failure)
         }
         runCatching {
             val status = YoutubeDL.getInstance()
                 .updateYoutubeDL(context, YoutubeDL.UpdateChannel.STABLE)
+            // `UpdateStatus` vient d'une bibliothèque compilée en Kotlin : le compilateur
+            // le voit comme type de plateforme, d'où la branche `else` obligatoire.
             when (status) {
                 YoutubeDL.UpdateStatus.ALREADY_UP_TO_DATE -> "Déjà à jour"
                 YoutubeDL.UpdateStatus.DONE -> "Mise à jour installée"
+                else -> "Mise à jour terminée"
             }
         }
     }
