@@ -44,12 +44,19 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - uses: android-actions/setup-android@v3
-
+      # Pas d'android-actions/setup-android : l'action tente d'installer le paquet « tools »,
+      # supprimé du dépôt Android, et échoue avant même de compiler. Le runner fournit déjà le SDK.
       - name: Installer la plateforme 36
         run: |
-          sdkmanager --install "platforms;android-36" "build-tools;36.0.0" "platform-tools" > /dev/null
-          sdkmanager --licenses > /dev/null || true
+          SDKMANAGER="$(command -v sdkmanager || true)"
+          if [ -z "$SDKMANAGER" ]; then
+            SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          fi
+          echo "sdkmanager : $SDKMANAGER"
+          yes | "$SDKMANAGER" --licenses > /dev/null 2>&1 || true
+          "$SDKMANAGER" "platforms;android-36" "build-tools;36.0.0" "platform-tools" 2>&1 | tail -5
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          ls "$ANDROID_HOME/platforms"
 
       - uses: gradle/actions/setup-gradle@v4
         with:
