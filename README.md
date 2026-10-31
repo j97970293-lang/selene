@@ -4,6 +4,31 @@ Selene est une application Android Kotlin/Compose de résolution et de télécha
 
 L’application est conçue pour télécharger les contenus que l’utilisateur est autorisé à enregistrer. Les conditions d’utilisation et les droits d’auteur de chaque service restent applicables.
 
+## Télécharger l'APK
+
+Deux APK signés (clé de debug : installation directe acceptée par Android), compilés
+automatiquement par GitHub Actions à chaque poussée :
+
+| Architecture | Fichier | Taille |
+| --- | --- | --- |
+| `arm64-v8a` (64 bits, à prendre en priorité) | [selene-0.1.0-arm64-v8a.apk](https://github.com/j97970293-lang/selene/releases/download/v0.1.0/selene-0.1.0-arm64-v8a.apk) | 55 Mo |
+| `armeabi-v7a` (32 bits, appareils anciens) | [selene-0.1.0-armeabi-v7a.apk](https://github.com/j97970293-lang/selene/releases/download/v0.1.0/selene-0.1.0-armeabi-v7a.apk) | 49 Mo |
+
+Page de la release : <https://github.com/j97970293-lang/selene/releases/tag/v0.1.0>
+
+L'essentiel du poids vient de `yt-dlp` : FFmpeg (34 Mo) et l'interpréteur Python
+(13,6 Mo) embarqués par architecture. Les ABI `x86`/`x86_64` ne sont pas produites :
+elles ne servaient qu'aux émulateurs et doublaient le téléchargement.
+
+## Compilation vérifiée
+
+| Job GitHub Actions | Ce qu'il prouve |
+| --- | --- |
+| `Tests JVM (cœur non-Android)` | résolveurs, file, coffre, parseurs : 95 tests, ~14 s |
+| `APK release (SDK Android)` | `assembleRelease` complet : R8, ressources réduites, deux APK par ABI |
+
+Localement, sans SDK Android : `cd app && ./verify-jvm.sh`.
+
 ## Fonctionnalités
 
 - Analyse d’une URL `http(s)` depuis l’application ou via le partage Android.
