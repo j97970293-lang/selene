@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Selene</string>
+
+    <string name="nav_home">Accueil</string>
+    <string name="nav_downloads">Téléchargements</string>
+    <string name="nav_library">Bibliothèque</string>
+    <string name="nav_settings">Réglages</string>
+
+    <string name="resolve_title">Nouveau téléchargement</string>
+    <string name="resolve_url_label">Adresse du média</string>
+    <string name="resolve_action">Analyser</string>
+    <string name="resolve_empty">Collez une URL, ou partagez-la depuis une autre application.</string>
+    <string name="resolve_no_variant">Aucun format exploitable trouvé pour cette adresse.</string>
+    <string name="resolve_choose_format">Choisir un format</string>
+    <string name="resolve_start">Télécharger</string>
+    <string name="resolve_invalid_url">Adresse invalide : une URL http(s) complète est attendue.</string>
+
+    <string name="downloads_title">Téléchargements</string>
+    <string name="downloads_active">En cours</string>
+    <string name="downloads_finished">Terminés</string>
+    <string name="downloads_empty">Aucun téléchargement pour l\'instant.</string>
+    <string name="download_pause">Mettre en pause</string>
+    <string name="download_resume">Reprendre</string>
+    <string name="download_cancel">Annuler</string>
+    <string name="download_retry">Réessayer</string>
+
+    <string name="library_title">Bibliothèque</string>
+    <string name="library_search">Rechercher dans la bibliothèque</string>
+    <string name="library_empty">Vos médias téléchargés apparaîtront ici.</string>
+
+    <string name="settings_title">Réglages</string>
+    <string name="settings_destination">Dossier de destination</string>
+    <string name="settings_wifi_only">Télécharger uniquement en Wi-Fi</string>
+    <string name="settings_theme">Thème</string>
+    <string name="settings_clipboard">Proposer les liens copiés</string>
+    <string name="settings_clipboard_hint">Désactivé par défaut : Selene ne lit pas le presse-papiers sans votre accord.</string>
+    <string name="settings_about">À propos</string>
+
+    <string name="notification_channel_downloads">Téléchargements</string>
+    <string name="notification_channel_done">Téléchargements terminés</string>
+    <string name="notification_progress">%1$s — %2$d%%</string>
+
+    <string name="action_open">Ouvrir</string>
+    <string name="action_share">Partager</string>
+    <string name="action_delete">Supprimer</string>
+    <string name="action_save">Enregistrer</string>
+    <string name="error_generic">Une erreur est survenue.</string>
+</resources>
