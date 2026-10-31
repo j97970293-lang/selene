@@ -1,36 +1,28 @@
 # Où est quoi, et comment le voir sur GitHub
 
-## 1. Le dépôt `selene` existe-t-il sur GitHub ?
+## 1. Le dépôt `selene` sur GitHub
 
-**Non, pas encore.** Il existe sur le disque de l'atelier (`/home/user/selene`), committé en git
-(`1 commit`, 61 fichiers), mais il n'a jamais été poussé. Je ne peux pas créer un dépôt sur **ton**
-compte GitHub : cela demande ton authentification, et je n'ai ni identifiant ni jeton ici.
+**Publié** : https://github.com/j97970293-lang/selene — **privé**, branche `main`.
 
-Deux façons de le publier, à toi de choisir.
+| Point | Valeur |
+| --- | --- |
+| Visibilité | privé (vérifié par l'API : `private: true`) |
+| Commits | `4ce4d1b` socle + HLS/DASH + pont + import yt-dlp, `89a0ae2` documentation |
+| Fichiers suivis | 61 |
 
-### A. Tu crées le dépôt, je pousse
-
-1. Sur GitHub : **New repository** → nom `selene` → **Private** → ne rien initialiser.
-2. Donne-moi un jeton **fine-grained**, porté sur ce seul dépôt, droit **Contents: Read and write**,
-   expiration 7 jours. Pas un jeton global `repo`.
+Mise à jour depuis l'atelier :
 
 ```bash
-git remote add origin https://<jeton>@github.com/j97970293-lang/selene.git
-git push -u origin main
-```
-
-### B. Tu récupères l'archive et tu pousses toi-même (aucun jeton à transmettre)
-
-Le dépôt complet est dans **`selene.bundle`** (82 Ko, historique inclus). Sur ta machine :
-
-```bash
-git clone selene.bundle selene
 cd selene
-git remote set-url origin git@github.com:j97970293-lang/selene.git
-git push -u origin main
+git add -A && git commit -m "..."
+git push
 ```
 
-C'est la voie recommandée : rien de sensible ne circule.
+Le remote est une URL propre (`https://github.com/j97970293-lang/selene.git`) : aucun jeton n'est
+stocké dans `.git/config`. Toute poussée ultérieure doit passer par tes identifiants.
+
+L'archive **`selene.bundle`** reste disponible comme sauvegarde hors ligne du dépôt complet
+(historique inclus) : `git clone selene.bundle selene`.
 
 ## 2. Y a-t-il du code source de Snaptube dans `apk-reverse` ?
 
