@@ -8,6 +8,7 @@ import androidx.work.WorkerParameters
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import io.selene.app.data.db.SeleneDatabase
+import io.selene.app.data.db.toVariant
 import io.selene.app.model.TaskState
 import kotlinx.coroutines.CancellationException
 import java.io.File
@@ -40,6 +41,8 @@ class DownloadWorker @AssistedInject constructor(
         val task = taskDao.byId(taskId) ?: return Result.failure()
         val variant = database.variantDao().byId(task.variantId) ?: return Result.failure()
         val media = database.mediaDao().byId(variant.mediaId) ?: return Result.failure()
+        // L'entité Room n'est pas l'objet métier : le moteur attend un `Variant`.
+        val model = variant.toVariant()
 
         if (task.state == TaskState.DONE.name || task.state == TaskState.CANCELLED.name) {
             return Result.success()
@@ -81,7 +84,7 @@ class DownloadWorker @AssistedInject constructor(
                 when {
                     variant.id.startsWith("yt-dlp:") -> ytDlpDownloader.download(
                         pageUrl = media.canonicalUrl,
-                        variant = variant,
+                        variant = model,
                         target = target,
                         onProgress = onProgress,
                     )

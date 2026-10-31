@@ -121,9 +121,9 @@ private fun TaskCard(
     onCancel: (() -> Unit)?,
     onPlay: (() -> Unit)?,
     onRemove: (() -> Unit)?,
-    onUp: () -> Unit,
-    onDown: () -> Unit,
-    onBoost: () -> Unit,
+    onUp: (() -> Unit)? = null,
+    onDown: (() -> Unit)? = null,
+    onBoost: (() -> Unit)? = null,
 ) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -150,10 +150,12 @@ private fun TaskCard(
             // File priorisée : ▲ / ▼ dans la même bande, ★ pour passer en urgent (priorité 10).
             if (task.state == "QUEUED" || task.state == "PAUSED") {
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    TextButton(onClick = onUp) { Text("▲") }
-                    TextButton(onClick = onDown) { Text("▼") }
-                    TextButton(onClick = onBoost) {
-                        Text(if (task.priority > 0) "★ urgent" else "☆ prioriser")
+                    onUp?.let { TextButton(onClick = it) { Text("▲") } }
+                    onDown?.let { TextButton(onClick = it) { Text("▼") } }
+                    onBoost?.let {
+                        TextButton(onClick = it) {
+                            Text(if (task.priority > 0) "★ urgent" else "☆ prioriser")
+                        }
                     }
                 }
             }
